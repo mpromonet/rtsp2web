@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
 	int c = 0;
 	const char * port = "8080";
 	std::string sslCertificate;
-	std::string webroot = "vuejs/dist";
+	std::string webroot = "html";
 	std::string nbthreads;
 
 	while ((c = getopt (argc, argv, "hv::" "P:c:p:N:" )) != -1)
@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
 
 			case 'h':
 			{
-				std::cout << argv[0] << " [-v[v]] [-P httpport] [-c sslkeycert] [-R rtspport] [-W width] [-H height] [-F fps] [-G <w>x<h>x<f>] url" << std::endl;
+				std::cout << argv[0] << " [-v[v]] [-P httpport] [-c sslkeycert] url" << std::endl;
 				std::cout << "\t -v               : verbose " << std::endl;
 				std::cout << "\t -v v             : very verbose " << std::endl;
 				std::cout << "\t -P port          : server port (default "<< port << ")" << std::endl;

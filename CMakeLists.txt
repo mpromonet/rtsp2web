@@ -1,8 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
 
-option (WITH_COMPRESS "Enable compression" ON)
-option (BUILD_UI "Build ui" ON)
-
 project(rtsp2ws)
 
 
@@ -29,15 +26,9 @@ target_link_libraries (${PROJECT_NAME} liblive555helper)
 add_subdirectory(libhttpjsonserver EXCLUDE_FROM_ALL)
 target_link_libraries (${PROJECT_NAME} httpjsonserver)
 
-# ui
-if (BUILD_UI)
-	add_custom_target(${PROJECT_NAME}-ui COMMAND npm install -C ${CMAKE_CURRENT_SOURCE_DIR}/vuejs && npm run build -C ${CMAKE_CURRENT_SOURCE_DIR}/vuejs)
-	add_dependencies(${PROJECT_NAME} ${PROJECT_NAME}-ui)
-endif()
-
 # install
 install (TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
-install (DIRECTORY vuejs/dist/ DESTINATION share/${PROJECT_NAME})
+install (DIRECTORY html/ DESTINATION share/${PROJECT_NAME})
 
 SET(CPACK_GENERATOR "TGZ")
 SET(CPACK_SYSTEM_NAME ${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}-${CMAKE_BUILD_TYPE})

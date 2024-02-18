@@ -1,0 +1,121 @@
+<html>
+<head>
+    <style>
+    #content {
+      height: calc(100vh - 100px);
+      overflow-y: auto;
+      text-align: center;
+    }
+    h1 {
+      text-align: center;
+    }
+    footer {
+      text-align: center;
+    }
+    footer > * {
+      display: inline;
+    }    
+    </style>
+</head>
+<body>
+    <h1 id="message"></h1>
+    <div id="content">
+        <video id="video" muted preload="none"></video>
+    </div>
+    <footer>
+            <a href="https://github.com/mpromonet/rtsp2ws">rtsp2ws</a>
+            <div id="version"></div>
+    </footer>
+</body>
+<script>
+
+    const videoCanvas = document.createElement("canvas");
+    const videoContext = videoCanvas.getContext("2d");
+
+    video.srcObject = videoCanvas.captureStream();
+    video.play();
+    videoContext.clearRect(0, 0, videoCanvas.width, videoCanvas.height);
+
+    fetch("/api/version").then(r => r.json()).then(r => version.innerText = r);
+
+    function displayFrame(frame) {
+        videoContext.canvas.width = frame.displayWidth;
+        videoContext.canvas.height = frame.displayHeight;
+        videoContext.drawImage(frame, 0, 0);
+        frame.close();
+    }
+
+    let decoder = null;
+    async function onH264Frame(data) {
+        if (!decoder) {
+            decoder = new VideoDecoder({
+                output: (frame) => this.frameResolved(frame),
+                error: (e) => console.log(e.message),
+            });
+        }
+
+        const naluType = data[4] & 0x1F;
+        if (decoder.state !== "configured" && naluType === 7) {
+            let codec = 'avc1.';
+            for (let i = 0; i < 3; i++) {
+                codec += ('00' + data[5 + i].toString(16)).slice(-2);
+            }
+
+            const config = { codec };
+            const support = await VideoDecoder.isConfigSupported(config);
+            if (support.supported) {
+                decoder.configure(config);
+            } else {
+                return Promise.reject(`${codec} is not supported`);
+            }
+        }
+        if (decoder.state === "configured") {
+            const chunk = new EncodedVideoChunk({
+                timestamp: performance.now(),
+                type: (naluType === 7) || (naluType === 5) ? "key" : "delta",
+                data,
+            });
+            decoder.decode(chunk);
+            return new Promise(r => this.frameResolved = r);
+        } else {
+            return Promise.reject(`H264 decoder not configured`);
+        }
+    }
+
+    function onFrame(data) {
+        if ((data.length > 3) && (data[0] === 0) && (data[1] === 0) && (data[2] === 0) && (data[3] === 1)) {
+            return onH264Frame(data);
+        } else {
+            return Promise.reject(`Unknown format`);
+        }
+    }
+
+    async function onMessage(message) {
+        const { data } = message;
+        if (data instanceof ArrayBuffer) {
+            const bytes = new Uint8Array(data);
+            try {
+                const frame = await onFrame(bytes);
+                displayFrame(frame);
+                message.innerText = '';
+            } catch (e) {
+                message.innerText = e;
+            }
+        }
+    }
+
+    function connectWebSocket(wsurl) {
+        console.log(`Connecting WebSocket to ${wsurl}`);
+        let ws = new WebSocket(wsurl);
+        ws.binaryType = 'arraybuffer';
+        ws.onmessage = onMessage;
+        ws.onclose = () => setTimeout(() => ws.close(), connectWebSocket(wsurl), 1000);
+    }
+
+    let wsurl = new URL("./ws", location.href);
+    wsurl.protocol = wsurl.protocol.replace("http", "ws");
+    connectWebSocket(wsurl.href);
+
+</script>
+
+</html>
