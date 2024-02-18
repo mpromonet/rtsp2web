@@ -1,0 +1,9 @@
+*.cmake
+Makefile
+CMakeCache.txt
+CMakeFiles/
+live/
+*.tar.gz
+dist/
+node_modules/
+rtsp2ws
