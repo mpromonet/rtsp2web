@@ -31,7 +31,7 @@ class Rtsp2Ws
 
             m_thread = std::thread([this, url, verbose](){
                 Environment env(m_stop);
-                RTSPCallback cb(m_httpServer);
+                RTSPCallback cb(m_httpServer, "/ws");
                 RTSPConnection rtspClient(env, &cb, url.c_str(), 10, RTSPConnection::RTPOVERTCP, verbose);
                 
                 env.mainloop();	

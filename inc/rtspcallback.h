@@ -22,7 +22,7 @@ class RTSPCallback : public RTSPConnection::Callback
 {
         
     public:
-        RTSPCallback(HttpServerRequestHandler& httpServer): m_httpServer(httpServer)   {}
+        RTSPCallback(HttpServerRequestHandler& httpServer, const std::string& uri): m_httpServer(httpServer), m_uri(uri)   {}
         
         virtual bool    onNewSession(const char* id, const char* media, const char* codec, const char* sdp) {
             std::cout << id << " " << media << "/" <<  codec << std::endl;
@@ -78,7 +78,7 @@ class RTSPCallback : public RTSPConnection::Callback
                 buf.insert(0, m_sps);
             }
             if (nalu == 5 || nalu == 1) {
-                m_httpServer.publishBin("/ws", buf.c_str(), buf.size());
+                m_httpServer.publishBin(m_uri, buf.c_str(), buf.size());
             }
             return true;
         }
@@ -96,6 +96,7 @@ class RTSPCallback : public RTSPConnection::Callback
         }		
     private:
         HttpServerRequestHandler&   m_httpServer;
+        std::string                 m_uri;
         std::string                 m_sps;
         std::string                 m_pps;
 };
