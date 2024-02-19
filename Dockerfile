@@ -1,6 +1,6 @@
 ARG IMAGE=ubuntu:22.04
 FROM $IMAGE as builder
-WORKDIR /rtsp2ws²	
+WORKDIR /rtsp2ws	
 COPY . .
 
 RUN apt-get update \
