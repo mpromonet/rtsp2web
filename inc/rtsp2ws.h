@@ -63,6 +63,9 @@ class Rtsp2Ws
         }
 
         virtual ~Rtsp2Ws() {
+            for (auto & it : m_streams) {
+                delete it.second;
+            }
         }
 
         const void* getContext() { 

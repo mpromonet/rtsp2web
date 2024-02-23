@@ -41,12 +41,12 @@ void sighandler(int)
 int main(int argc, char* argv[]) 
 {	
 	int verbose=0;
-	int c = 0;
 	const char * port = "8080";
 	std::string sslCertificate;
 	std::string webroot = "html";
 	std::string nbthreads;
 
+	int c = 0;
 	while ((c = getopt (argc, argv, "hv::" "P:c:p:N:" )) != -1)
 	{
 		switch (c)
@@ -116,6 +116,7 @@ int main(int argc, char* argv[])
 		while (!stop) {
 			sleep(1); 
 		}
+		LOG(NOTICE) << "Exiting..." << std::endl;
 	}
 	
 	return 0;
