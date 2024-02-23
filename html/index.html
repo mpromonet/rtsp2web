@@ -20,7 +20,6 @@
 <body>
     <h1 id="message"></h1>
     <div id="content">
-        <video id="video" muted preload="none"></video>
     </div>
     <footer>
             <a href="https://github.com/mpromonet/rtsp2ws">rtsp2ws</a>
@@ -28,93 +27,110 @@
     </footer>
 </body>
 <script>
-
-    const videoCanvas = document.createElement("canvas");
-    const videoContext = videoCanvas.getContext("2d");
-
-    video.srcObject = videoCanvas.captureStream();
-    video.play();
-    videoContext.clearRect(0, 0, videoCanvas.width, videoCanvas.height);
-
     fetch("/api/version").then(r => r.json()).then(r => version.innerText = r);
 
-    function displayFrame(frame) {
-        videoContext.canvas.width = frame.displayWidth;
-        videoContext.canvas.height = frame.displayHeight;
-        videoContext.drawImage(frame, 0, 0);
-        frame.close();
-    }
-
-    let decoder = null;
-    async function onH264Frame(data) {
-        if (!decoder) {
-            decoder = new VideoDecoder({
-                output: (frame) => this.frameResolved(frame),
-                error: (e) => console.log(e.message),
-            });
+    class VideoStream {
+        constructor(target) {
+            const videoCanvas = document.createElement("canvas");
+            this.videoContext = videoCanvas.getContext("2d");
+            this.decoder = null;
+            this.frameResolved = null;
+            
+            target.srcObject = videoCanvas.captureStream();
+            target.play();
+            this.videoContext.clearRect(0, 0, videoCanvas.width, videoCanvas.height);
         }
 
-        const naluType = data[4] & 0x1F;
-        if (decoder.state !== "configured" && naluType === 7) {
-            let codec = 'avc1.';
-            for (let i = 0; i < 3; i++) {
-                codec += ('00' + data[5 + i].toString(16)).slice(-2);
+        displayFrame(frame) {
+            this.videoContext.canvas.width = frame.displayWidth;
+            this.videoContext.canvas.height = frame.displayHeight;
+            this.videoContext.drawImage(frame, 0, 0);
+            frame.close();
+        }
+
+        async onH264Frame(data) {
+            if (!this.decoder) {
+                this.decoder = new VideoDecoder({
+                    output: (frame) => this.frameResolved(frame),
+                    error: (e) => console.log(e.message),
+                });
             }
 
-            const config = { codec };
-            const support = await VideoDecoder.isConfigSupported(config);
-            if (support.supported) {
-                decoder.configure(config);
+            const naluType = data[4] & 0x1F;
+            if (this.decoder.state !== "configured" && naluType === 7) {
+                let codec = 'avc1.';
+                for (let i = 0; i < 3; i++) {
+                    codec += ('00' + data[5 + i].toString(16)).slice(-2);
+                }
+
+                const config = { codec };
+                const support = await VideoDecoder.isConfigSupported(config);
+                if (support.supported) {
+                    this.decoder.configure(config);
+                } else {
+                    return Promise.reject(`${codec} is not supported`);
+                }
+            }
+            if (this.decoder.state === "configured") {
+                const chunk = new EncodedVideoChunk({
+                    timestamp: performance.now(),
+                    type: (naluType === 7) || (naluType === 5) ? "key" : "delta",
+                    data,
+                });
+                this.decoder.decode(chunk);
+                return new Promise(r => this.frameResolved = r);
             } else {
-                return Promise.reject(`${codec} is not supported`);
+                return Promise.reject(`H264 decoder not configured`);
             }
         }
-        if (decoder.state === "configured") {
-            const chunk = new EncodedVideoChunk({
-                timestamp: performance.now(),
-                type: (naluType === 7) || (naluType === 5) ? "key" : "delta",
-                data,
+
+        onFrame(data) {
+            if ((data.length > 3) && (data[0] === 0) && (data[1] === 0) && (data[2] === 0) && (data[3] === 1)) {
+                return this.onH264Frame(data);
+            } else {
+                return Promise.reject(`Unknown format`);
+            }
+        }
+
+        async onMessage(message) {
+            const { data } = message;
+            if (data instanceof ArrayBuffer) {
+                const bytes = new Uint8Array(data);
+                try {
+                    const frame = await this.onFrame(bytes);
+                    this.displayFrame(frame);
+                    message.innerText = '';
+                } catch (e) {
+                    message.innerText = e;
+                }
+            }
+        }
+
+        connectWebSocket(wsurl) {
+            console.log(`Connecting WebSocket to ${wsurl}`);
+            let ws = new WebSocket(wsurl);
+            ws.binaryType = 'arraybuffer';
+            ws.onmessage = (message) => this.onMessage(message);
+            ws.onclose = () => setTimeout(() => ws.close(), this.connectWebSocket(wsurl), 1000);
+        }
+    }
+
+    fetch("/api/streams")
+        .then(r => r.json())
+        .then(r => {
+            const content = document.getElementById("content");
+            r.forEach(stream => {
+                const video = document.createElement("video");
+                video.muted = true;
+                video.preload = "none";
+                content.appendChild(video);
+                let wsurl = new URL(stream, location.href);
+                wsurl.protocol = wsurl.protocol.replace("http", "ws");
+                const videoStream = new VideoStream(video);
+                videoStream.connectWebSocket(wsurl.href);
             });
-            decoder.decode(chunk);
-            return new Promise(r => this.frameResolved = r);
-        } else {
-            return Promise.reject(`H264 decoder not configured`);
-        }
-    }
+        });
 
-    function onFrame(data) {
-        if ((data.length > 3) && (data[0] === 0) && (data[1] === 0) && (data[2] === 0) && (data[3] === 1)) {
-            return onH264Frame(data);
-        } else {
-            return Promise.reject(`Unknown format`);
-        }
-    }
-
-    async function onMessage(message) {
-        const { data } = message;
-        if (data instanceof ArrayBuffer) {
-            const bytes = new Uint8Array(data);
-            try {
-                const frame = await onFrame(bytes);
-                displayFrame(frame);
-                message.innerText = '';
-            } catch (e) {
-                message.innerText = e;
-            }
-        }
-    }
-
-    function connectWebSocket(wsurl) {
-        console.log(`Connecting WebSocket to ${wsurl}`);
-        let ws = new WebSocket(wsurl);
-        ws.binaryType = 'arraybuffer';
-        ws.onmessage = onMessage;
-        ws.onclose = () => setTimeout(() => ws.close(), connectWebSocket(wsurl), 1000);
-    }
-
-    let wsurl = new URL("./ws", location.href);
-    wsurl.protocol = wsurl.protocol.replace("http", "ws");
-    connectWebSocket(wsurl.href);
 
 </script>
 
