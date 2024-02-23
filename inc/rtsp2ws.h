@@ -26,10 +26,12 @@ int NullLogger(const struct mg_connection *, const char *) {
 class Rtsp2Ws
 {
     public:
-        Rtsp2Ws(const std::string & url, const std::vector<std::string>& options, int verbose)
+        Rtsp2Ws(const std::vector<std::string> & urls, const std::vector<std::string>& options, int verbose)
             : m_httpServer(this->getHttpFunc(), m_wsfunc, options, verbose ? NULL : NullLogger) {
-                this->addStream("/ws", url, verbose);
-                this->addStream("/ws1", url, verbose);
+                int idx = 0;
+                for (auto & url : urls) {
+                    this->addStream("/ws" + std::to_string(idx++) ,url, verbose);
+                }
         }
 
         void addStream(const std::string & wsurl, const std::string & rtspurl, int verbose) {

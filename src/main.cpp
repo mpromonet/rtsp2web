@@ -96,15 +96,15 @@ int main(int argc, char* argv[])
 		options.push_back("num_threads");
 		options.push_back(nbthreads);
 	}		
-	std::string url;
-	if (optind<argc)
+	std::vector<std::string> urls;
+	while (optind<argc)
 	{
-			url = argv[optind];
+			urls.push_back(argv[optind]);
 			optind++;
 	}
 
 	// api server
-	Rtsp2Ws server(url, options, verbose);
+	Rtsp2Ws server(urls, options, verbose);
 	if (server.getContext() == NULL)
 	{
 		LOG(WARN) << "Cannot listen on port:" << port; 
