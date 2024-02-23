@@ -26,11 +26,16 @@ int NullLogger(const struct mg_connection *, const char *) {
 class Rtsp2Ws
 {
     public:
-        Rtsp2Ws(const std::string & url, const std::vector<std::string>& options, int verbose):
-            m_httpServer(this->getHttpFunc(), this->getWsFunc(), options, verbose ? NULL : NullLogger) {
-            m_streams["/ws"] = new Rtsp2WsStream(m_httpServer, "/ws",  url, verbose);
+        Rtsp2Ws(const std::string & url, const std::vector<std::string>& options, int verbose)
+            : m_httpServer(this->getHttpFunc(), m_wsfunc, options, verbose ? NULL : NullLogger) {
+                this->addStream("/ws", url, verbose);
+                this->addStream("/ws1", url, verbose);
         }
 
+        void addStream(const std::string & wsurl, const std::string & rtspurl, int verbose) {
+            m_streams[wsurl] = new Rtsp2WsStream(m_httpServer, wsurl, rtspurl, verbose);
+            m_httpServer.addWebSocket(wsurl);
+        }
 
         std::map<std::string,HttpServerRequestHandler::httpFunction>& getHttpFunc() {
             if (m_httpfunc.empty()) {
@@ -53,15 +58,6 @@ class Rtsp2Ws
                 };
             }
             return m_httpfunc;
-        }
-
-        std::map<std::string,HttpServerRequestHandler::wsFunction>& getWsFunc() {
-            if (m_wsfunc.empty()) {
-                    m_wsfunc["/ws"]  = [this](const struct mg_request_info *req_info, const Json::Value & in) -> Json::Value {
-                        return in;
-                    };
-            }
-            return m_wsfunc;
         }
 
         virtual ~Rtsp2Ws() {
