@@ -17,7 +17,7 @@
 #include <iostream>
 
 #include "HttpServerRequestHandler.h"
-#include "rtspcallback.h"
+#include "rtsp2wsstream.h"
 
 int NullLogger(const struct mg_connection *, const char *) {
     return 1;
@@ -28,23 +28,24 @@ class Rtsp2Ws
     public:
         Rtsp2Ws(const std::string & url, const std::vector<std::string>& options, int verbose):
             m_httpServer(this->getHttpFunc(), this->getWsFunc(), options, verbose ? NULL : NullLogger) {
-
-            m_thread = std::thread([this, url, verbose](){
-                Environment env(m_stop);
-                RTSPCallback cb(m_httpServer, "/ws");
-                RTSPConnection rtspClient(env, &cb, url.c_str(), 10, RTSPConnection::RTPOVERTCP, verbose);
-                
-                env.mainloop();	
-            });
+            m_streams["/ws"] = new Rtsp2WsStream(m_httpServer, "/ws",  url, verbose);
         }
+
 
         std::map<std::string,HttpServerRequestHandler::httpFunction>& getHttpFunc() {
             if (m_httpfunc.empty()) {
                 m_httpfunc["/api/version"] = [this](const struct mg_request_info *, const Json::Value &) -> Json::Value {
                         return Json::Value(VERSION);
                 };
+                m_httpfunc["/api/streams"] = [this](const struct mg_request_info *, const Json::Value &) -> Json::Value {
+                        Json::Value answer(Json::arrayValue);
+                        for (auto & it : this->m_streams) {
+                                answer.append(it.first);
+                        }
+                        return answer;
+                };                
                 m_httpfunc["/api/help"]    = [this](const struct mg_request_info *, const Json::Value & ) -> Json::Value {
-                        Json::Value answer;
+                        Json::Value answer(Json::arrayValue);
                         for (auto it : this->m_httpfunc) {
                                 answer.append(it.first);
                         }
@@ -63,10 +64,7 @@ class Rtsp2Ws
             return m_wsfunc;
         }
 
-
         virtual ~Rtsp2Ws() {
-            m_stop = 1;
-            m_thread.join();
         }
 
         const void* getContext() { 
@@ -77,6 +75,5 @@ class Rtsp2Ws
         std::map<std::string,HttpServerRequestHandler::httpFunction>  m_httpfunc;
         std::map<std::string,HttpServerRequestHandler::wsFunction>    m_wsfunc;
         HttpServerRequestHandler                                      m_httpServer;
-        char                                                          m_stop;
-        std::thread                                                   m_thread;
+        std::map<std::string,Rtsp2WsStream*>                          m_streams;
 };
