@@ -29,6 +29,8 @@ class RTSPCallback : public RTSPConnection::Callback
 
             bool ret = false;
             if (strcmp(codec, "H264") == 0) {
+                ret = true;
+                m_codec = codec;
                 const char* pattern="sprop-parameter-sets=";
                 const char* sprop=strstr(sdp, pattern);
                 if (sprop)
@@ -60,25 +62,119 @@ class RTSPCallback : public RTSPConnection::Callback
                         delete[]pps_decoded;
                     }
                 }                        
+            } else if (strcmp(codec, "H265") == 0) {
                 ret = true;
+                m_codec = codec;
+                const char* pattern="sprop-vps=";
+                const char* sprop=strstr(sdp, pattern);
+                if (sprop)
+                {
+                    std::string sdpstr(sprop+strlen(pattern));
+                    size_t pos = sdpstr.find_first_of(" ;\r\n");
+                    if (pos != std::string::npos)
+                    {
+                        sdpstr.erase(pos);
+                    }
+                    
+                    unsigned int length = 0;
+                    unsigned char * vps_decoded = base64Decode(sdpstr.c_str(), length);
+                    if (vps_decoded) {
+                        std::string cfg;
+                        cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
+                        cfg.insert(cfg.end(), vps_decoded, vps_decoded+length);
+                        onData(id, (unsigned char*)cfg.c_str(), cfg.size(), timeval());
+                        delete[]vps_decoded;
+                    }
+                }
+                pattern="sprop-sps=";
+                sprop=strstr(sdp, pattern);
+                if (sprop)
+                {
+                    std::string sdpstr(sprop+strlen(pattern));
+                    size_t pos = sdpstr.find_first_of(" ;\r\n");
+                    if (pos != std::string::npos)
+                    {
+                        sdpstr.erase(pos);
+                    }
+                    
+                    unsigned int length = 0;
+                    unsigned char * sps_decoded = base64Decode(sdpstr.c_str(), length);
+                    if (sps_decoded) {
+                        std::string cfg;
+                        cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
+                        cfg.insert(cfg.end(), sps_decoded, sps_decoded+length);
+                        onData(id, (unsigned char*)cfg.c_str(), cfg.size(), timeval());
+                        delete[]sps_decoded;
+                    }
+                }
+                pattern="sprop-pps=";
+                sprop=strstr(sdp, pattern);
+                if (sprop)
+                {
+                    std::string sdpstr(sprop+strlen(pattern));
+                    size_t pos = sdpstr.find_first_of(" ;\r\n");
+                    if (pos != std::string::npos)
+                    {
+                        sdpstr.erase(pos);
+                    }
+                    
+                    unsigned int length = 0;
+                    unsigned char * pps_decoded = base64Decode(sdpstr.c_str(), length);
+                    if (pps_decoded) {
+                        std::string cfg;
+                        cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
+                        cfg.insert(cfg.end(), pps_decoded, pps_decoded+length);
+                        onData(id, (unsigned char*)cfg.c_str(), cfg.size(), timeval());
+                        delete[]pps_decoded;
+                    }
+                }
             }
-
+            if (!ret) {
+                std::cout << codec << " not supported" << std::endl;
+            }
             return ret;
         }
         
         virtual bool    onData(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) {
-            std::string buf(buffer, buffer+size);
-            int nalu = buffer[4] & 0x1F;
-            if (nalu == 7) {
-                m_sps = buf;
-            } else if (nalu == 8) {
-                m_pps = buf;
-            } else if  (nalu == 5) {
-                buf.insert(0, m_pps);
-                buf.insert(0, m_sps);
-            }
-            if (nalu == 5 || nalu == 1) {
-                m_httpServer.publishBin(m_uri, buf.c_str(), buf.size());
+            if (m_codec == "H264") {
+                std::string buf(buffer, buffer+size);
+                int nalu = buffer[4] & 0x1F;
+                if (nalu == 7) {
+                    m_sps = buf;
+                } else if (nalu == 8) {
+                    m_pps = buf;
+                } else if  (nalu == 5) {
+                    buf.insert(0, m_pps);
+                    buf.insert(0, m_sps);
+                }
+                if (nalu == 5 || nalu == 1) {
+                    Json::Value data;
+                    data["codec"] = m_codec;
+                    data["ts"] = presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
+                    m_httpServer.publishJSON(m_uri, data);                    
+                    m_httpServer.publishBin(m_uri, buf.c_str(), buf.size());
+                }
+            } else if (m_codec == "H265") {
+                std::string buf(buffer, buffer+size);
+                int nalu = (buffer[4] & 0x7E)>>1;
+                if (nalu == 32) {
+                    m_vps = buf;
+                } else if (nalu == 33) {
+                    m_sps = buf;
+                } else if (nalu == 34) {
+                    m_pps = buf;
+                } else if  (nalu == 19 || nalu == 20) {
+                    buf.insert(0, m_vps);
+                    buf.insert(0, m_pps);
+                    buf.insert(0, m_sps);
+                }
+                if (nalu == 19 || nalu ==20 || nalu == 1) {
+                    Json::Value data;
+                    data["codec"] = m_codec;
+                    data["ts"] = presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
+                    m_httpServer.publishJSON(m_uri, data);
+                    m_httpServer.publishBin(m_uri, buf.c_str(), buf.size());
+                }
             }
             return true;
         }
@@ -97,6 +193,8 @@ class RTSPCallback : public RTSPConnection::Callback
     private:
         HttpServerRequestHandler&   m_httpServer;
         std::string                 m_uri;
+        std::string                 m_codec;
+        std::string                 m_vps;
         std::string                 m_sps;
         std::string                 m_pps;
 };

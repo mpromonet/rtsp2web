@@ -43,6 +43,7 @@ class VideoStream {
             const config = { codec };
             const support = await VideoDecoder.isConfigSupported(config);
             if (support.supported) {
+                console.log(`H264 decoder supported with codec ${codec}`);
                 this.decoder.configure(config);
             } else {
                 return Promise.reject(`${codec} is not supported`);
@@ -80,14 +81,17 @@ class VideoStream {
             } catch (e) {
                 this.videoElement.title = e;
             }
+        } else if (typeof data === 'string') {
+            const msg = JSON.parse(data);
+            console.log(msg);
         }
     }
 
     connectWebSocket(wsurl) {
         console.log(`Connecting WebSocket to ${wsurl}`);
-        let ws = new WebSocket(wsurl);
-        ws.binaryType = 'arraybuffer';
-        ws.onmessage = (message) => this.onMessage(message);
-        ws.onclose = () => setTimeout(() => ws.close(), this.connectWebSocket(wsurl), 1000);
+        this.ws = new WebSocket(wsurl);
+        this.ws.binaryType = 'arraybuffer';
+        this.ws.onmessage = (message) => this.onMessage(message);
+        this.ws.onclose = () => setTimeout(() => this.ws.close(), this.connectWebSocket(wsurl), 1000);
     }
 }
