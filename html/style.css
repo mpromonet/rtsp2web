@@ -1,0 +1,23 @@
+/* ---------------------------------------------------------------------------
+** This software is in the public domain, furnished "as is", without technical
+** support, and with no warranty, express or implied, as to its usefulness for
+** any purpose.
+**
+** -------------------------------------------------------------------------*/
+
+@import "nav.css";
+
+#content {
+    height: calc(100vh - 100px);
+    overflow-y: auto;
+    text-align: center;
+  }
+  h1 {
+    text-align: center;
+  }
+  footer {
+    text-align: center;
+  }
+  footer > * {
+    display: inline;
+  }    
