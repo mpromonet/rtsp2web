@@ -34,6 +34,9 @@ class RTSPCallback : public RTSPConnection::Callback
             } else if (strcmp(codec, "H265") == 0) {
                 m_codec = codec;
                 ret =  this->onH265Config(id, sdp);
+            } else if (strcmp(codec, "JPEG") == 0) {
+                m_codec = codec;
+                ret = true;
             } else {
                 std::cout << codec << " not supported" << std::endl;
             }
@@ -45,6 +48,12 @@ class RTSPCallback : public RTSPConnection::Callback
                 this->onH264Data(id, buffer, size, presentationTime);
             } else if (m_codec == "H265") {
                 this->onH265Data(id, buffer, size, presentationTime);
+            } else if (m_codec == "JPEG") {
+                Json::Value data;
+                data["codec"] = m_codec;
+                data["ts"] = presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
+                m_httpServer.publishJSON(m_uri, data);                    
+                m_httpServer.publishBin(m_uri, (const char*)buffer, size);                
             }
             return true;
         }

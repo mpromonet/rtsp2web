@@ -94,11 +94,24 @@ class VideoStream {
         return this.decodeFrame(data, type);
     }
 
+    async onJPEGFrame(data) {
+        let binaryStr = "";
+        for (let i = 0; i < data.length; i++) {
+          binaryStr += String.fromCharCode(data[i]);
+        }
+        const img = new Image();
+        img.src = "data:image/jpeg;base64," + btoa(binaryStr);
+        await new Promise(r => img.onload=r);
+        return new VideoFrame(img, {timestamp: this.metadata.ts});
+    }
+
     onFrame(data) {
         if (this.metadata.codec === 'H264') {
             return this.onH264Frame(data);
         } else if (this.metadata.codec === 'H265') {
             return this.onH265Frame(data);
+        } else if (this.metadata.codec === 'JPEG') {
+            return this.onJPEGFrame(data);
         } else {
             return Promise.reject(`Unknown format`);
         }
