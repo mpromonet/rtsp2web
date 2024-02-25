@@ -16,10 +16,7 @@
 #include <string>
 #include <iostream>
 
-#include "logger.h"
 #include "rtsp2ws.h"
-
-int LogLevel=NOTICE;
 
 /* ---------------------------------------------------------------------------
 **  end condition
@@ -72,9 +69,6 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	// initialize log4cpp
-	initLogger(verbose);
-
 
 	// http options
 	std::vector<std::string> options;
@@ -107,16 +101,16 @@ int main(int argc, char* argv[])
 	Rtsp2Ws server(urls, options, verbose);
 	if (server.getContext() == NULL)
 	{
-		LOG(WARN) << "Cannot listen on port:" << port; 
+		std::cout << "Cannot listen on port:" << port << std::endl; 
 	}
 	else
 	{		
-		LOG(NOTICE) << "Started on port:" << port << " webroot:" << webroot;
+		std::cout << "Started on port:" << port << " webroot:" << webroot << std::endl;
 		signal(SIGINT,sighandler);	 
 		while (!stop) {
 			sleep(1); 
 		}
-		LOG(NOTICE) << "Exiting..." << std::endl;
+		std::cout << "Exiting..." << std::endl;
 	}
 	
 	return 0;

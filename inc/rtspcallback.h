@@ -63,15 +63,8 @@ class RTSPCallback : public RTSPConnection::Callback
             const char* sprop=strstr(sdp, pattern);
             if (sprop)
             {
-                std::string sdpstr(sprop+strlen(pattern));
-                size_t pos = sdpstr.find_first_of(" ;\r\n");
-                if (pos != std::string::npos)
-                {
-                    sdpstr.erase(pos);
-                }
-                
                 unsigned int length = 0;
-                unsigned char * vps_decoded = base64Decode(sdpstr.c_str(), length);
+                unsigned char * vps_decoded = extractProp(sprop+strlen(pattern), length);
                 if (vps_decoded) {
                     std::string cfg;
                     cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
@@ -84,15 +77,8 @@ class RTSPCallback : public RTSPConnection::Callback
             sprop=strstr(sdp, pattern);
             if (sprop)
             {
-                std::string sdpstr(sprop+strlen(pattern));
-                size_t pos = sdpstr.find_first_of(" ;\r\n");
-                if (pos != std::string::npos)
-                {
-                    sdpstr.erase(pos);
-                }
-                
                 unsigned int length = 0;
-                unsigned char * sps_decoded = base64Decode(sdpstr.c_str(), length);
+                unsigned char * sps_decoded = extractProp(sprop+strlen(pattern), length);
                 if (sps_decoded) {
                     std::string cfg;
                     cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
@@ -105,15 +91,8 @@ class RTSPCallback : public RTSPConnection::Callback
             sprop=strstr(sdp, pattern);
             if (sprop)
             {
-                std::string sdpstr(sprop+strlen(pattern));
-                size_t pos = sdpstr.find_first_of(" ;\r\n");
-                if (pos != std::string::npos)
-                {
-                    sdpstr.erase(pos);
-                }
-                
                 unsigned int length = 0;
-                unsigned char * pps_decoded = base64Decode(sdpstr.c_str(), length);
+                unsigned char * pps_decoded = extractProp(sprop+strlen(pattern), length);
                 if (pps_decoded) {
                     std::string cfg;
                     cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
@@ -205,7 +184,19 @@ class RTSPCallback : public RTSPConnection::Callback
         
         virtual void    onDataTimeout(RTSPConnection& connection)       {
             connection.start();
-        }		
+        }	
+
+    private:
+        unsigned char* extractProp(const char* spropvalue, unsigned int & length) {
+            std::string sdpstr(spropvalue);
+            size_t pos = sdpstr.find_first_of(" ;\r\n");
+            if (pos != std::string::npos)
+            {
+                sdpstr.erase(pos);
+            }            
+            return base64Decode(sdpstr.c_str(), length);
+        }
+
     private:
         HttpServerRequestHandler&   m_httpServer;
         std::string                 m_uri;
