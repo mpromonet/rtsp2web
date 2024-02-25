@@ -8,14 +8,17 @@
 class VideoStream {
     constructor(videoElement) {
         this.videoElement = videoElement;
-        const videoCanvas = document.createElement("canvas");
-        this.videoContext = videoCanvas.getContext("2d");
-        this.decoder = null;
         this.frameResolved = null;
         this.metadata = {codec: '', ts: 0}
-        
-        videoElement.srcObject = videoCanvas.captureStream();
-        videoElement.play();
+        this.reconnectTimer = null;
+        this.ws = null;
+
+        const videoCanvas = document.createElement("canvas");
+        this.videoContext = videoCanvas.getContext("2d");        
+        this.videoElement.srcObject = videoCanvas.captureStream();
+        this.videoElement.play();
+
+        this.decoder = this.createDecoder();
         this.clearFrame();
     }
 
@@ -31,12 +34,10 @@ class VideoStream {
     }
 
     createDecoder() {
-        if (!this.decoder) {
-            this.decoder = new VideoDecoder({
+        return   this.decoder = new VideoDecoder({
                 output: (frame) => this.displayFrame(frame),
                 error: (e) => console.log(e.message),
-            });
-        }
+        });
     }
 
     async decodeFrame(data, type) {
@@ -54,7 +55,6 @@ class VideoStream {
     }
 
     async onH264Frame(data) {
-        this.createDecoder();
         const naluType = data[4] & 0x1F;
         if (this.decoder.state !== "configured" && naluType === 7) {
             let codec = 'avc1.';
@@ -76,7 +76,6 @@ class VideoStream {
     }
 
     async onH265Frame(data) {
-        this.createDecoder();
         const naluType = (data[4] & 0x7E) >> 1;
         if (this.decoder.state !== "configured" && naluType === 32) {
             let codec = 'hev1.';
@@ -145,5 +144,7 @@ class VideoStream {
             this.ws.close();
         }
         this.ws = null;
+        this.decoder = this.createDecoder();
+        this.clearFrame();
     }
 }
