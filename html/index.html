@@ -18,8 +18,8 @@
 <script>
     fetch("/api/version").then(r => r.json()).then(r => version.innerText = r);
 
+    const videoStream = new VideoStream(video);
     function displayStream(video, stream) {
-        const videoStream = new VideoStream(video);
         let wsurl = new URL(stream, location.href);
         wsurl.protocol = wsurl.protocol.replace("http", "ws");
         videoStream.connectWebSocket(wsurl.href);

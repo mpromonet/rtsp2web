@@ -16,7 +16,11 @@ class VideoStream {
         
         videoElement.srcObject = videoCanvas.captureStream();
         videoElement.play();
-        this.videoContext.clearRect(0, 0, videoCanvas.width, videoCanvas.height);
+        this.clearFrame();
+    }
+
+    clearFrame() {
+        this.videoContext.clearRect(0, 0, this.videoContext.canvas.width, this.videoContext.canvas.height);
     }
 
     displayFrame(frame) {
@@ -85,6 +89,8 @@ class VideoStream {
             if (support.supported) {
                 console.log(`H265 decoder supported with codec ${codec}`);
                 this.decoder.configure(config);
+
+
             } else {
                 return Promise.reject(`${codec} is not supported`);
             }
@@ -121,10 +127,23 @@ class VideoStream {
     }
 
     connectWebSocket(wsurl) {
+        this.closeWebSocket();
         console.log(`Connecting WebSocket to ${wsurl}`);
         this.ws = new WebSocket(wsurl);
         this.ws.binaryType = 'arraybuffer';
         this.ws.onmessage = (message) => this.onMessage(message);
-        this.ws.onclose = () => setTimeout(() => this.ws.close(), this.connectWebSocket(wsurl), 1000);
+        this.ws.onclose = () => this.reconnectTimer = setTimeout(() => this.connectWebSocket(wsurl), 1000);
+    }
+
+    closeWebSocket() {
+        if (this.reconnectTimer) {
+            clearTimeout(this.reconnectTimer);
+            this.reconnectTimer = null;
+        }
+        if (this.ws  && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.onclose = () => {};
+            this.ws.close();
+        }
+        this.ws = null;
     }
 }
