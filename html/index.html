@@ -20,11 +20,7 @@
     fetch("/api/version").then(r => r.json()).then(r => version.innerText = r);
 
     const videoStream = new VideoStream(video);
-    function displayStream(video, stream) {
-        let wsurl = new URL(stream, location.href);
-        wsurl.protocol = wsurl.protocol.replace("http", "ws");
-        videoStream.connectWebSocket(wsurl.href);
-    }
+
     function selectStream(stream) {
         for (const opt of menu.getElementsByTagName('a')) {
             if (opt.url === stream) {
@@ -34,7 +30,6 @@
             }
 	    }
     }
-
 
     fetch("/api/streams")
         .then(r => r.json())
