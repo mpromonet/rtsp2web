@@ -1,0 +1,28 @@
+
+  name: rtsp2ws
+  base: core22
+  version: git
+  summary: RTSP to websocket 
+  description: |
+    This is a gateway to forward encoded frame received from RTSP/RTP to websocket and then decode using WebCodec.
+
+  grade: stable 
+  confinement: strict
+
+  parts:
+    rtsp2ws:
+      plugin: cmake
+      source: .
+      source-type: git
+      build-packages:
+      - g++
+      - pkg-config
+      - libssl-dev      
+      stage-packages:
+      - libssl3      
+
+  apps:
+    v4l2rtspserver:
+      command: usr/local/bin/rtsp2ws -b $SNAP/usr/local/share/rtsp2ws/
+      daemon: simple   
+      plugs: [network-bind]
