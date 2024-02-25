@@ -12,6 +12,7 @@ class VideoStream {
         this.videoContext = videoCanvas.getContext("2d");
         this.decoder = null;
         this.frameResolved = null;
+        this.metadata = {codec: '', ts: 0}
         
         videoElement.srcObject = videoCanvas.captureStream();
         videoElement.play();
@@ -25,14 +26,31 @@ class VideoStream {
         frame.close();
     }
 
-    async onH264Frame(data) {
+    createDecoder() {
         if (!this.decoder) {
             this.decoder = new VideoDecoder({
-                output: (frame) => this.frameResolved(frame),
+                output: (frame) => this.displayFrame(frame),
                 error: (e) => console.log(e.message),
             });
         }
+    }
 
+    async decodeFrame(data, type) {
+        if (this.decoder.state === "configured") {
+            const chunk = new EncodedVideoChunk({
+                timestamp: this.metadata.ts,
+                type,
+                data,
+            });
+            this.decoder.decode(chunk);
+            return new Promise(r => this.frameResolved = r);
+        } else {
+            return Promise.reject(`${this.metadata.codec} decoder not configured`);
+        }
+    }
+
+    async onH264Frame(data) {
+        this.createDecoder();
         const naluType = data[4] & 0x1F;
         if (this.decoder.state !== "configured" && naluType === 7) {
             let codec = 'avc1.';
@@ -49,22 +67,37 @@ class VideoStream {
                 return Promise.reject(`${codec} is not supported`);
             }
         }
-        if (this.decoder.state === "configured") {
-            const chunk = new EncodedVideoChunk({
-                timestamp: performance.now(),
-                type: (naluType === 7) || (naluType === 5) ? "key" : "delta",
-                data,
-            });
-            this.decoder.decode(chunk);
-            return new Promise(r => this.frameResolved = r);
-        } else {
-            return Promise.reject(`H264 decoder not configured`);
+        const type = (naluType === 7) || (naluType === 5) ? "key" : "delta";
+        return this.decodeFrame(data, type);
+    }
+
+    async onH265Frame(data) {
+        this.createDecoder();
+        const naluType = (data[4] & 0x7E) >> 1;
+        if (this.decoder.state !== "configured" && naluType === 32) {
+            let codec = 'hev1.';
+            for (let i = 0; i < 3; i++) {
+                codec += ('00' + data[5 + i].toString(16)).slice(-2);
+            }
+
+            const config = { codec };
+            const support = await VideoDecoder.isConfigSupported(config);
+            if (support.supported) {
+                console.log(`H265 decoder supported with codec ${codec}`);
+                this.decoder.configure(config);
+            } else {
+                return Promise.reject(`${codec} is not supported`);
+            }
         }
+        const type = (naluType === 32) || (naluType === 19) || (naluType === 20) ? "key" : "delta";
+        return this.decodeFrame(data, type);
     }
 
     onFrame(data) {
-        if ((data.length > 3) && (data[0] === 0) && (data[1] === 0) && (data[2] === 0) && (data[3] === 1)) {
+        if (this.metadata.codec === 'H264') {
             return this.onH264Frame(data);
+        } else if (this.metadata.codec === 'H265') {
+            return this.onH265Frame(data);
         } else {
             return Promise.reject(`Unknown format`);
         }
@@ -79,11 +112,11 @@ class VideoStream {
                 this.displayFrame(frame);
                 this.videoElement.title = '';
             } catch (e) {
+                console.warn(e);
                 this.videoElement.title = e;
             }
         } else if (typeof data === 'string') {
-            const msg = JSON.parse(data);
-            console.log(msg);
+            this.metadata = JSON.parse(data);
         }
     }
 

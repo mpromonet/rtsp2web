@@ -164,9 +164,9 @@ class RTSPCallback : public RTSPConnection::Callback
                 } else if (nalu == 34) {
                     m_pps = buf;
                 } else if  (nalu == 19 || nalu == 20) {
-                    buf.insert(0, m_vps);
                     buf.insert(0, m_pps);
                     buf.insert(0, m_sps);
+                    buf.insert(0, m_vps);
                 }
                 if (nalu == 19 || nalu ==20 || nalu == 1) {
                     Json::Value data;
