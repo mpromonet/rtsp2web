@@ -24,104 +24,44 @@ class RTSPCallback : public RTSPConnection::Callback
     public:
         RTSPCallback(HttpServerRequestHandler& httpServer, const std::string& uri): m_httpServer(httpServer), m_uri(uri)   {}
 
-        void onH264Config(const char* id, const char* sdp) {
-            const char* pattern="sprop-parameter-sets=";
-            const char* sprop=strstr(sdp, pattern);
-            if (sprop)
-            {
-                std::string sdpstr(sprop+strlen(pattern));
-                size_t pos = sdpstr.find_first_of(" ;\r\n");
-                if (pos != std::string::npos)
-                {
-                    sdpstr.erase(pos);
-                }
-                
-                std::string sps=sdpstr.substr(0, sdpstr.find_first_of(","));
-                unsigned int length = 0;
-                unsigned char * sps_decoded = base64Decode(sps.c_str(), length);
-                if (sps_decoded) {
-                    std::string cfg;
-                    cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
-                    cfg.insert(cfg.end(), sps_decoded, sps_decoded+length);
-                    onData(id, (unsigned char*)cfg.c_str(), cfg.size(), timeval());
-                    delete[]sps_decoded;
-                }
-                std::string pps=sdpstr.substr(sdpstr.find_first_of(",")+1);
-                unsigned char * pps_decoded = base64Decode(pps.c_str(), length);
-                if (pps_decoded) {
-                    std::string cfg;
-                    cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
-                    cfg.insert(cfg.end(), pps_decoded, pps_decoded+length);
-                    onData(id, (unsigned char*)cfg.c_str(), cfg.size(), timeval());
-                    delete[]pps_decoded;
-                }
-            }                        
-        }
-
-        void onH265Config(const char* id, const char* sdp) {
-            const char* pattern="sprop-vps=";
-            const char* sprop=strstr(sdp, pattern);
-            if (sprop)
-            {
-                unsigned int length = 0;
-                unsigned char * vps_decoded = extractProp(sprop+strlen(pattern), length);
-                if (vps_decoded) {
-                    std::string cfg;
-                    cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
-                    cfg.insert(cfg.end(), vps_decoded, vps_decoded+length);
-                    onData(id, (unsigned char*)cfg.c_str(), cfg.size(), timeval());
-                    delete[]vps_decoded;
-                }
-            }
-            pattern="sprop-sps=";
-            sprop=strstr(sdp, pattern);
-            if (sprop)
-            {
-                unsigned int length = 0;
-                unsigned char * sps_decoded = extractProp(sprop+strlen(pattern), length);
-                if (sps_decoded) {
-                    std::string cfg;
-                    cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
-                    cfg.insert(cfg.end(), sps_decoded, sps_decoded+length);
-                    onData(id, (unsigned char*)cfg.c_str(), cfg.size(), timeval());
-                    delete[]sps_decoded;
-                }
-            }
-            pattern="sprop-pps=";
-            sprop=strstr(sdp, pattern);
-            if (sprop)
-            {
-                unsigned int length = 0;
-                unsigned char * pps_decoded = extractProp(sprop+strlen(pattern), length);
-                if (pps_decoded) {
-                    std::string cfg;
-                    cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
-                    cfg.insert(cfg.end(), pps_decoded, pps_decoded+length);
-                    onData(id, (unsigned char*)cfg.c_str(), cfg.size(), timeval());
-                    delete[]pps_decoded;
-                }
-            }
-        }
-
         virtual bool    onNewSession(const char* id, const char* media, const char* codec, const char* sdp) {
             std::cout << id << " " << media << "/" <<  codec << std::endl;
 
             bool ret = false;
             if (strcmp(codec, "H264") == 0) {
-                ret = true;
                 m_codec = codec;
-                this->onH264Config(id, sdp);
+                ret = this->onH264Config(id, sdp);
             } else if (strcmp(codec, "H265") == 0) {
-                ret = true;
                 m_codec = codec;
-                this->onH265Config(id, sdp);
-            }
-            if (!ret) {
+                ret =  this->onH265Config(id, sdp);
+            } else {
                 std::cout << codec << " not supported" << std::endl;
             }
             return ret;
         }
         
+        virtual bool    onData(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) {
+            if (m_codec == "H264") {
+                this->onH264Data(id, buffer, size, presentationTime);
+            } else if (m_codec == "H265") {
+                this->onH265Data(id, buffer, size, presentationTime);
+            }
+            return true;
+        }
+        
+        virtual void    onError(RTSPConnection& connection, const char* message) {
+            connection.start(10);
+        }
+        
+        virtual void    onConnectionTimeout(RTSPConnection& connection) {
+            connection.start();
+        }
+        
+        virtual void    onDataTimeout(RTSPConnection& connection)       {
+            connection.start();
+        }	
+
+    private:
         void onH264Data(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) {
             std::string buf(buffer, buffer+size);
             int nalu = buffer[4] & 0x1F;
@@ -165,28 +105,83 @@ class RTSPCallback : public RTSPConnection::Callback
             }
         }
 
-        virtual bool    onData(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) {
-            if (m_codec == "H264") {
-                this->onH264Data(id, buffer, size, presentationTime);
-            } else if (m_codec == "H265") {
-                this->onH265Data(id, buffer, size, presentationTime);
+        bool onH264Config(const char* id, const char* sdp) {
+            const char* pattern="sprop-parameter-sets=";
+            const char* sprop=strstr(sdp, pattern);
+            if (sprop)
+            {
+                std::string sdpstr(sprop+strlen(pattern));
+                size_t pos = sdpstr.find_first_of(" ;\r\n");
+                if (pos != std::string::npos) {
+                    sdpstr.erase(pos);
+                }
+                
+                std::string sps=sdpstr.substr(0, sdpstr.find_first_of(","));
+                unsigned int length = 0;
+                unsigned char * sps_decoded = base64Decode(sps.c_str(), length);
+                if (sps_decoded) {
+                    std::string cfg;
+                    cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
+                    cfg.insert(cfg.end(), sps_decoded, sps_decoded+length);
+                    onData(id, (unsigned char*)cfg.c_str(), cfg.size(), timeval());
+                    delete[]sps_decoded;
+                }
+                std::string pps=sdpstr.substr(sdpstr.find_first_of(",")+1);
+                unsigned char * pps_decoded = base64Decode(pps.c_str(), length);
+                if (pps_decoded) {
+                    std::string cfg;
+                    cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
+                    cfg.insert(cfg.end(), pps_decoded, pps_decoded+length);
+                    onData(id, (unsigned char*)cfg.c_str(), cfg.size(), timeval());
+                    delete[]pps_decoded;
+                }
+            } 
+            return true;                       
+        }
+
+        bool onH265Config(const char* id, const char* sdp) {
+            const char* pattern="sprop-vps=";
+            const char* sprop=strstr(sdp, pattern);
+            if (sprop) {
+                unsigned int length = 0;
+                unsigned char * vps_decoded = extractProp(sprop+strlen(pattern), length);
+                if (vps_decoded) {
+                    std::string cfg;
+                    cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
+                    cfg.insert(cfg.end(), vps_decoded, vps_decoded+length);
+                    onData(id, (unsigned char*)cfg.c_str(), cfg.size(), timeval());
+                    delete[]vps_decoded;
+                }
+            }
+            pattern="sprop-sps=";
+            sprop=strstr(sdp, pattern);
+            if (sprop) {
+                unsigned int length = 0;
+                unsigned char * sps_decoded = extractProp(sprop+strlen(pattern), length);
+                if (sps_decoded) {
+                    std::string cfg;
+                    cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
+                    cfg.insert(cfg.end(), sps_decoded, sps_decoded+length);
+                    onData(id, (unsigned char*)cfg.c_str(), cfg.size(), timeval());
+                    delete[]sps_decoded;
+                }
+            }
+            pattern="sprop-pps=";
+            sprop=strstr(sdp, pattern);
+            if (sprop) {
+                unsigned int length = 0;
+                unsigned char * pps_decoded = extractProp(sprop+strlen(pattern), length);
+                if (pps_decoded) {
+                    std::string cfg;
+                    cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
+                    cfg.insert(cfg.end(), pps_decoded, pps_decoded+length);
+                    onData(id, (unsigned char*)cfg.c_str(), cfg.size(), timeval());
+                    delete[]pps_decoded;
+                }
             }
             return true;
         }
-        
-        virtual void    onError(RTSPConnection& connection, const char* message) {
-            connection.start(10);
-        }
-        
-        virtual void    onConnectionTimeout(RTSPConnection& connection) {
-            connection.start();
-        }
-        
-        virtual void    onDataTimeout(RTSPConnection& connection)       {
-            connection.start();
-        }	
 
-    private:
         unsigned char* extractProp(const char* spropvalue, unsigned int & length) {
             std::string sdpstr(spropvalue);
             size_t pos = sdpstr.find_first_of(" ;\r\n");
