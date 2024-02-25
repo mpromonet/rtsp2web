@@ -140,7 +140,7 @@ class VideoStream {
         this.ws = new WebSocket(wsurl.href);
         this.ws.binaryType = 'arraybuffer';
         this.ws.onmessage = (message) => this.onMessage(message);
-        this.ws.onclose = () => this.reconnectTimer = setTimeout(() => this.connectWebSocket(wsurl), 1000);
+        this.ws.onclose = () => this.reconnectTimer = setTimeout(() => this.connect(stream), 1000);
     }
 
     close() {
