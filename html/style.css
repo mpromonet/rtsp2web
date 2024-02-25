@@ -11,13 +11,17 @@
     height: calc(100vh - 100px);
     overflow-y: auto;
     text-align: center;
-  }
-  h1 {
-    text-align: center;
-  }
-  footer {
-    text-align: center;
-  }
-  footer > * {
-    display: inline;
-  }    
+}
+video {
+  width: auto;
+  height: 100%;
+}
+h1 {
+  text-align: center;
+}
+footer {
+  text-align: center;
+}
+footer > * {
+  display: inline;
+}    
