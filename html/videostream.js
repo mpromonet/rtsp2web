@@ -125,10 +125,12 @@ class VideoStream {
         }
     }
 
-    connectWebSocket(wsurl) {
+    connectWebSocket(stream) {
+        let wsurl = new URL(stream, location.href);
+        wsurl.protocol = wsurl.protocol.replace("http", "ws");
         this.closeWebSocket();
         console.log(`Connecting WebSocket to ${wsurl}`);
-        this.ws = new WebSocket(wsurl);
+        this.ws = new WebSocket(wsurl.href);
         this.ws.binaryType = 'arraybuffer';
         this.ws.onmessage = (message) => this.onMessage(message);
         this.ws.onclose = () => this.reconnectTimer = setTimeout(() => this.connectWebSocket(wsurl), 1000);

@@ -45,16 +45,18 @@
                 option.text = stream;
                 option.onclick = function () { 
                     if (this.className !== "active") {
-                        displayStream(video,stream);
+                        videoStream.connectWebSocket(stream);
                         selectStream(stream);
                     }
                 }
                 menu.appendChild(option);
             });
 
-            const stream = r[0];
-            displayStream(video,stream);
-            selectStream(stream);
+            if (r.length > 0) {
+                const stream = r[0];
+                videoStream.connectWebSocket(stream);
+                selectStream(stream);
+            }
         });
 </script>
 

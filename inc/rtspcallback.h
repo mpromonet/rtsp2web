@@ -110,31 +110,13 @@ class RTSPCallback : public RTSPConnection::Callback
             const char* sprop=strstr(sdp, pattern);
             if (sprop)
             {
-                std::string sdpstr(sprop+strlen(pattern));
-                size_t pos = sdpstr.find_first_of(" ;\r\n");
-                if (pos != std::string::npos) {
-                    sdpstr.erase(pos);
-                }
+                std::string sdpstr(extractProp(sprop+strlen(pattern)));
                 
                 std::string sps=sdpstr.substr(0, sdpstr.find_first_of(","));
-                unsigned int length = 0;
-                unsigned char * sps_decoded = base64Decode(sps.c_str(), length);
-                if (sps_decoded) {
-                    std::string cfg;
-                    cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
-                    cfg.insert(cfg.end(), sps_decoded, sps_decoded+length);
-                    onData(id, (unsigned char*)cfg.c_str(), cfg.size(), timeval());
-                    delete[]sps_decoded;
-                }
+                onCfg(id, sps);
+
                 std::string pps=sdpstr.substr(sdpstr.find_first_of(",")+1);
-                unsigned char * pps_decoded = base64Decode(pps.c_str(), length);
-                if (pps_decoded) {
-                    std::string cfg;
-                    cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
-                    cfg.insert(cfg.end(), pps_decoded, pps_decoded+length);
-                    onData(id, (unsigned char*)cfg.c_str(), cfg.size(), timeval());
-                    delete[]pps_decoded;
-                }
+                onCfg(id, pps);
             } 
             return true;                       
         }
@@ -143,53 +125,43 @@ class RTSPCallback : public RTSPConnection::Callback
             const char* pattern="sprop-vps=";
             const char* sprop=strstr(sdp, pattern);
             if (sprop) {
-                unsigned int length = 0;
-                unsigned char * vps_decoded = extractProp(sprop+strlen(pattern), length);
-                if (vps_decoded) {
-                    std::string cfg;
-                    cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
-                    cfg.insert(cfg.end(), vps_decoded, vps_decoded+length);
-                    onData(id, (unsigned char*)cfg.c_str(), cfg.size(), timeval());
-                    delete[]vps_decoded;
-                }
+                std::string vps(extractProp(sprop+strlen(pattern)));
+                onCfg(id, vps);
             }
             pattern="sprop-sps=";
             sprop=strstr(sdp, pattern);
             if (sprop) {
-                unsigned int length = 0;
-                unsigned char * sps_decoded = extractProp(sprop+strlen(pattern), length);
-                if (sps_decoded) {
-                    std::string cfg;
-                    cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
-                    cfg.insert(cfg.end(), sps_decoded, sps_decoded+length);
-                    onData(id, (unsigned char*)cfg.c_str(), cfg.size(), timeval());
-                    delete[]sps_decoded;
-                }
+                std::string sps(extractProp(sprop+strlen(pattern)));
+                onCfg(id, sps);
             }
             pattern="sprop-pps=";
             sprop=strstr(sdp, pattern);
             if (sprop) {
-                unsigned int length = 0;
-                unsigned char * pps_decoded = extractProp(sprop+strlen(pattern), length);
-                if (pps_decoded) {
-                    std::string cfg;
-                    cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
-                    cfg.insert(cfg.end(), pps_decoded, pps_decoded+length);
-                    onData(id, (unsigned char*)cfg.c_str(), cfg.size(), timeval());
-                    delete[]pps_decoded;
-                }
+                std::string pps(extractProp(sprop+strlen(pattern)));
+                onCfg(id, pps);
             }
             return true;
         }
 
-        unsigned char* extractProp(const char* spropvalue, unsigned int & length) {
+        std::string extractProp(const char* spropvalue) {
             std::string sdpstr(spropvalue);
             size_t pos = sdpstr.find_first_of(" ;\r\n");
-            if (pos != std::string::npos)
-            {
+            if (pos != std::string::npos) {
                 sdpstr.erase(pos);
             }            
-            return base64Decode(sdpstr.c_str(), length);
+            return sdpstr;
+        }
+
+        void onCfg(const char* id, const std::string& prop) {
+            unsigned int length = 0;
+            unsigned char * decoded = base64Decode(prop.c_str(), length);
+            if (decoded) {
+                std::string cfg;
+                cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
+                cfg.insert(cfg.end(), decoded, decoded+length);
+                onData(id, (unsigned char*)cfg.c_str(), cfg.size(), timeval());
+                delete[]decoded;
+            }
         }
 
     private:
