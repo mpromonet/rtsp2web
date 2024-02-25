@@ -15,8 +15,11 @@
 </body>
 <script>
     fetch("/api/version").then(r => r.json()).then(r => version.innerText = r);
-    const videoStream = new VideoStream(video);
-    videoStream.connectWebSocket(location.search.slice(1));
+    const canvas = document.createElement("canvas");
+    video.srcObject = canvas.captureStream();
+    video.play();
+    const videoStream = new VideoStream(canvas);
+    videoStream.connect(location.search.slice(1) || "/ws0");
 </script>
 
 </html>

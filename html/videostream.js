@@ -6,17 +6,13 @@
 ** -------------------------------------------------------------------------*/
 
 class VideoStream {
-    constructor(videoElement) {
-        this.videoElement = videoElement;
+    constructor(videoCanvas) {
         this.frameResolved = null;
         this.metadata = {codec: '', ts: 0}
         this.reconnectTimer = null;
         this.ws = null;
 
-        const videoCanvas = document.createElement("canvas");
         this.videoContext = videoCanvas.getContext("2d");        
-        this.videoElement.srcObject = videoCanvas.captureStream();
-        this.videoElement.play();
 
         this.decoder = this.createDecoder();
         this.clearFrame();
@@ -115,20 +111,18 @@ class VideoStream {
             try {
                 const frame = await this.onFrame(bytes);
                 this.displayFrame(frame);
-                this.videoElement.title = '';
             } catch (e) {
                 console.warn(e);
-                this.videoElement.title = e;
             }
         } else if (typeof data === 'string') {
             this.metadata = JSON.parse(data);
         }
     }
 
-    connectWebSocket(stream) {
+    connect(stream) {
         let wsurl = new URL(stream, location.href);
         wsurl.protocol = wsurl.protocol.replace("http", "ws");
-        this.closeWebSocket();
+        this.close();
         console.log(`Connecting WebSocket to ${wsurl}`);
         this.ws = new WebSocket(wsurl.href);
         this.ws.binaryType = 'arraybuffer';
@@ -136,7 +130,7 @@ class VideoStream {
         this.ws.onclose = () => this.reconnectTimer = setTimeout(() => this.connectWebSocket(wsurl), 1000);
     }
 
-    closeWebSocket() {
+    close() {
         if (this.reconnectTimer) {
             clearTimeout(this.reconnectTimer);
             this.reconnectTimer = null;
