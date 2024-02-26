@@ -15,5 +15,4 @@ COPY --from=builder /usr/local/share/rtsp2ws/ /usr/local/share/rtsp2ws/
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates libssl-dev && rm -rf /var/lib/apt/lists/
 
-ENTRYPOINT [ "/usr/local/bin/rtsp2ws" ]
-CMD [ "-p", "/usr/local/share/rtsp2ws" ]
+ENTRYPOINT [ "/usr/local/bin/rtsp2ws", "-p", "/usr/local/share/rtsp2ws"]
