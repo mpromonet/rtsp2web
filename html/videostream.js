@@ -36,11 +36,11 @@ class VideoStream {
         });
     }
 
-    async decodeFrame(data, type) {
+    async decodeFrame(data) {
         if (this.decoder.state === "configured") {
             const chunk = new EncodedVideoChunk({
                 timestamp: this.metadata.ts,
-                type,
+                type: "key",
                 data,
             });
             this.decoder.decode(chunk);
@@ -67,17 +67,13 @@ class VideoStream {
                 return Promise.reject(`${codec} is not supported`);
             }
         }
-        const type = (naluType === 7) || (naluType === 5) ? "key" : "delta";
-        return this.decodeFrame(data, type);
+        return this.decodeFrame(data);
     }
 
     async onH265Frame(data) {
         const naluType = (data[4] & 0x7E) >> 1;
         if (this.decoder.state !== "configured" && naluType === 32) {
-            let codec = 'hev1.';
-            for (let i = 0; i < 3; i++) {
-                codec += ('00' + data[5 + i].toString(16)).slice(-2);
-            }
+            let codec = 'hev1.1.6.L93.B0';
 
             const config = { codec };
             const support = await VideoDecoder.isConfigSupported(config);
@@ -90,8 +86,7 @@ class VideoStream {
                 return Promise.reject(`${codec} is not supported`);
             }
         }
-        const type = (naluType === 32) || (naluType === 19) || (naluType === 20) ? "key" : "delta";
-        return this.decodeFrame(data, type);
+        return this.decodeFrame(data);
     }
 
     async onJPEGFrame(data) {
