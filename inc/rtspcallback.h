@@ -12,6 +12,7 @@
 #pragma once
 
 #include <iostream>
+#include <iomanip>
 
 #include "Base64.hh"
 
@@ -51,7 +52,7 @@ class RTSPCallback : public RTSPConnection::Callback
             } else if (m_codec == "JPEG") {
                 Json::Value data;
                 data["codec"] = m_codec;
-                data["ts"] = presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
+                data["ts"] = presentationTime.tv_sec*1000*1000+presentationTime.tv_usec;
                 m_httpServer.publishJSON(m_uri, data);                    
                 m_httpServer.publishBin(m_uri, (const char*)buffer, size);                
             }
@@ -85,7 +86,12 @@ class RTSPCallback : public RTSPConnection::Callback
             if (nalu == 5 || nalu == 1) {
                 Json::Value data;
                 data["codec"] = m_codec;
-                data["ts"] = presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
+                data["ts"] = presentationTime.tv_sec*1000*1000+presentationTime.tv_usec;
+                std::stringstream ss;
+                for (int i = 5; (i < 8) && (i < m_sps.size()); i++) {
+                    ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(m_sps[i]);
+                }
+                data["profile"] = ss.str();                
                 m_httpServer.publishJSON(m_uri, data);                    
                 m_httpServer.publishBin(m_uri, buf.c_str(), buf.size());
             }
@@ -108,7 +114,7 @@ class RTSPCallback : public RTSPConnection::Callback
             if (nalu == 19 || nalu ==20 || nalu == 1) {
                 Json::Value data;
                 data["codec"] = m_codec;
-                data["ts"] = presentationTime.tv_sec*1000+presentationTime.tv_usec/1000;
+                data["ts"] = presentationTime.tv_sec*1000*1000+presentationTime.tv_usec;                
                 m_httpServer.publishJSON(m_uri, data);
                 m_httpServer.publishBin(m_uri, buf.c_str(), buf.size());
             }
