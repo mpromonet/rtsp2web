@@ -41,10 +41,11 @@ int main(int argc, char* argv[])
 	const char * port = "8080";
 	std::string sslCertificate;
 	std::string webroot = "html";
+	int rtptransport = RTSPConnection::RTPOVERTCP;
 	std::string nbthreads;
 
 	int c = 0;
-	while ((c = getopt (argc, argv, "hv::" "P:c:p:N:" )) != -1)
+	while ((c = getopt (argc, argv, "hv::" "P:c:p:N:" "MUH" )) != -1)
 	{
 		switch (c)
 		{
@@ -53,7 +54,11 @@ int main(int argc, char* argv[])
 			case 'P': port = optarg; break;
 			case 'c': sslCertificate = optarg; break;
 			case 'N': nbthreads = optarg; break;
-			case 'p': webroot = optarg; break;		
+			case 'p': webroot = optarg; break;	
+
+			case 'M':	rtptransport = RTSPConnection::RTPUDPMULTICAST;  break;
+			case 'U':	rtptransport = RTSPConnection::RTPUDPUNICAST;  break;
+			case 'H':	rtptransport = RTSPConnection::RTPOVERHTTP;  break;				
 
 			case 'h':
 			{
@@ -98,7 +103,7 @@ int main(int argc, char* argv[])
 	}
 
 	// api server
-	Rtsp2Ws server(urls, options, verbose);
+	Rtsp2Ws server(urls, options, rtptransport, verbose);
 	if (server.getContext() == NULL)
 	{
 		std::cout << "Cannot listen on port:" << port << std::endl; 

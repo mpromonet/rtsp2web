@@ -18,12 +18,12 @@
 class Rtsp2WsStream
 {
     public:
-        Rtsp2WsStream(HttpServerRequestHandler &httpServer, const std::string & wsurl, const std::string & rtspurl, int verbose) :
+        Rtsp2WsStream(HttpServerRequestHandler &httpServer, const std::string & wsurl, const std::string & rtspurl, int rtptransport, int verbose) :
             m_stop(0),
-            m_thread(std::thread([this, &httpServer, wsurl, rtspurl, verbose]() {
+            m_thread(std::thread([this, &httpServer, wsurl, rtspurl, rtptransport, verbose]() {
                 Environment env(m_stop);
                 RTSPCallback cb(httpServer, wsurl);
-                RTSPConnection rtspClient(env, &cb, rtspurl.c_str(), 10, RTSPConnection::RTPOVERTCP, verbose);
+                RTSPConnection rtspClient(env, &cb, rtspurl.c_str(), 10, rtptransport, verbose);
                 
                 env.mainloop();	
             })) {
