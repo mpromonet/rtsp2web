@@ -85,13 +85,15 @@ class RTSPCallback : public RTSPConnection::Callback
             }
             if (nalu == 5 || nalu == 1) {
                 Json::Value data;
-                data["codec"] = m_codec;
                 data["ts"] = presentationTime.tv_sec*1000*1000+presentationTime.tv_usec;
                 std::stringstream ss;
                 for (int i = 5; (i < 8) && (i < m_sps.size()); i++) {
                     ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(m_sps[i]);
                 }
-                data["profile"] = ss.str();                
+                data["codec"] = "avc1." + ss.str();   
+                if (nalu == 5) {
+                    data["type"] = "keyframe";
+                }             
                 m_httpServer.publishJSON(m_uri, data);                    
                 m_httpServer.publishBin(m_uri, buf.c_str(), buf.size());
             }
@@ -113,8 +115,11 @@ class RTSPCallback : public RTSPConnection::Callback
             }
             if (nalu == 19 || nalu ==20 || nalu == 1) {
                 Json::Value data;
-                data["codec"] = m_codec;
-                data["ts"] = presentationTime.tv_sec*1000*1000+presentationTime.tv_usec;                
+                data["codec"] = "hev1.1.6.L93.B0";
+                data["ts"] = presentationTime.tv_sec*1000*1000+presentationTime.tv_usec;  
+                if (nalu == 19 || nalu == 20) {
+                    data["type"] = "keyframe";
+                }
                 m_httpServer.publishJSON(m_uri, data);
                 m_httpServer.publishBin(m_uri, buf.c_str(), buf.size());
             }

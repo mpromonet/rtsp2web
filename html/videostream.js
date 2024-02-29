@@ -8,14 +8,13 @@
 class VideoStream {
     constructor(videoCanvas) {
         this.frameResolved = null;
-        this.metadata = {codec: '', ts: 0}
+        this.metadata = {codec: '', ts: 0, type: ''};
         this.reconnectTimer = null;
         this.ws = null;
 
         this.videoContext = videoCanvas.getContext("2d");        
 
         this.decoder = this.createDecoder();
-        this.clearFrame();
     }
 
     clearFrame() {
@@ -30,6 +29,7 @@ class VideoStream {
     }
 
     createDecoder() {
+        this.clearFrame();
         return   this.decoder = new VideoDecoder({
                 output: (frame) => this.displayFrame(frame),
                 error: (e) => console.log(e.message),
@@ -50,38 +50,14 @@ class VideoStream {
         }
     }
 
-    async onH264Frame(data) {
-        const naluType = data[4] & 0x1F;
-        if (this.decoder.state !== "configured" && naluType === 7) {
-            let codec = 'avc1.';
-            for (let i = 0; i < 3; i++) {
-                codec += ('00' + data[5 + i].toString(16)).slice(-2);
-            }
-
+    async onH26xFrame(data) {
+        if (this.decoder.state !== "configured" && this.metadata.type === "keyframe" ) {
+            const codec = this.metadata.codec;
             const config = { codec };
             const support = await VideoDecoder.isConfigSupported(config);
             if (support.supported) {
-                console.log(`H264 decoder supported with codec ${codec}`);
+                console.log(`decoder supported with codec ${codec}`);
                 this.decoder.configure(config);
-            } else {
-                return Promise.reject(`${codec} is not supported`);
-            }
-        }
-        return this.decodeFrame(data);
-    }
-
-    async onH265Frame(data) {
-        const naluType = (data[4] & 0x7E) >> 1;
-        if (this.decoder.state !== "configured" && naluType === 32) {
-            let codec = 'hev1.1.6.L93.B0';
-
-            const config = { codec };
-            const support = await VideoDecoder.isConfigSupported(config);
-            if (support.supported) {
-                console.log(`H265 decoder supported with codec ${codec}`);
-                this.decoder.configure(config);
-
-
             } else {
                 return Promise.reject(`${codec} is not supported`);
             }
@@ -101,10 +77,8 @@ class VideoStream {
     }
 
     onFrame(data) {
-        if (this.metadata.codec === 'H264') {
-            return this.onH264Frame(data);
-        } else if (this.metadata.codec === 'H265') {
-            return this.onH265Frame(data);
+        if (this.metadata.codec.startsWith('avc1') || this.metadata.codec.startsWith('hev1') ) {
+            return this.onH26xFrame(data);
         } else if (this.metadata.codec === 'JPEG') {
             return this.onJPEGFrame(data);
         } else {
@@ -149,6 +123,5 @@ class VideoStream {
         }
         this.ws = null;
         this.decoder = this.createDecoder();
-        this.clearFrame();
     }
 }
