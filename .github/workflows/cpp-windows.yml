@@ -11,9 +11,9 @@ jobs:
     runs-on: windows-latest
     
     steps:
-    - uses: actions/checkout@latest
+    - uses: actions/checkout@v3
     - uses: lukka/get-cmake@latest      
-
+    
 
     - name: build
       shell: cmd
@@ -30,13 +30,13 @@ jobs:
           cpack
           echo "artifactPath=$(ls *.tar.gz)" >> $GITHUB_ENV
 
-    - uses: actions/upload-artifact@latest
+    - uses: actions/upload-artifact@v3
       with:
         name: ${{ env.artifactPath }}
         path: ${{ env.artifactPath }}
 
     - name: Release
-      uses: softprops/action-gh-release@latest
+      uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
         files: ${{ env.artifactPath }}  
