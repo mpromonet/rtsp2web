@@ -16,7 +16,8 @@ jobs:
     - name: pkg
       shell: cmd
       run: |
-        choco install --no-progress -y cmake --installargs 'ADD_CMAKE_TO_PATH=System' make llvm
+        choco install --no-progress -y cmake --installargs 'ADD_CMAKE_TO_PATH=System' 
+        choco install --no-progress -y ninja llvm
         git config --global core.autocrlf false 
         git config --global core.filemode false 
 
@@ -24,8 +25,8 @@ jobs:
       shell: cmd
       run: |
           set
-          cmake -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }} -DDETECT_OPENSSL=OFF .
-          make 
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }} -DCMAKE_MAKE_PROGRAM=ninja.bat -DDETECT_OPENSSL=OFF .
+          ninja 
 
     - name: cpack
       shell: bash
