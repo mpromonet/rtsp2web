@@ -44,12 +44,13 @@ int main(int argc, char* argv[])
 	options.allow_unrecognised_options();
 	options.add_options()
 		("h,help"      , "Print usage")
+		("v,verbose"   , "Verbose"              , cxxopts::value<int>()->default_value("0"))
 
 		("P,port"      , "Listening port"       , cxxopts::value<std::string>()->default_value("8080")) 
 		("N,thread"    , "Server number threads", cxxopts::value<std::string>()->default_value(""))
-		("v,verbose"   , "Verbose"              , cxxopts::value<int>()->default_value("0"))
 		("p,path"      , "Server root path"     , cxxopts::value<std::string>()->default_value("html"))
 		("c,sslkeycert", "Path to private key and certificate for HTTPS", cxxopts::value<std::string>()->default_value(""))
+
 		("M"           , "RTP over Multicast")
 		("U"           , "RTP over Unicast")
 		("H"           , "RTP over HTTP")
@@ -107,9 +108,9 @@ int main(int argc, char* argv[])
 	else
 	{		
 		std::cout << "Started on port:" << port << " webroot:" << webroot << std::endl;
-		signal(SIGINT,sighandler);	 
+		signal(SIGINT,sighandler); 
 		while (!stop) {
-			sleep(1); 
+			std::this_thread::sleep_for(std::chrono::seconds(1));
 		}
 		std::cout << "Exiting..." << std::endl;
 	}
