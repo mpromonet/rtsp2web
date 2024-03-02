@@ -17,7 +17,7 @@ jobs:
       shell: cmd
       run: |
         choco install --no-progress -y cmake --installargs 'ADD_CMAKE_TO_PATH=System' 
-        choco install --no-progress -y ninja llvm
+        choco install --no-progress -y llvm
         git config --global core.autocrlf false 
         git config --global core.filemode false 
 
