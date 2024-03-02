@@ -16,3 +16,4 @@ RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates libssl-dev && rm -rf /var/lib/apt/lists/
 
 ENTRYPOINT [ "/usr/local/bin/rtsp2ws", "-p", "/usr/local/share/rtsp2ws"]
+CMD ["rtsp://37.157.51.30/axis-media/media.amp","rtsp://71.83.5.156/axis-media/media.amp"]
