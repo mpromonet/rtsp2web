@@ -3,7 +3,7 @@
 [![GithubCI](https://github.com/mpromonet/rtsp2ws/workflows/C/C++%20CI%20windows/badge.svg)](https://github.com/mpromonet/rtsp2ws/actions)
 
 # rtsp2ws
-===
+
 This is a simple application that connect to RTSP streams, send compressed data over websocket and then decode on browser side using [webcodec](https://github.com/w3c/webcodecs)
 
 Build
