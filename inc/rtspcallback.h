@@ -54,7 +54,7 @@ class RTSPCallback : public RTSPConnection::Callback
             } else if (m_codec == "JPEG") {
                 Json::Value data;
                 data["codec"] = m_codec;
-                data["ts"] = 1000UL*1000UL*presentationTime.tv_sec+presentationTime.tv_usec;
+                data["ts"] = Json::Value::UInt64(1000ULL*1000*presentationTime.tv_sec+presentationTime.tv_usec);
                 m_httpServer.publishJSON(m_uri, data);                    
                 m_httpServer.publishBin(m_uri, (const char*)buffer, size);                
             }
@@ -87,7 +87,7 @@ class RTSPCallback : public RTSPConnection::Callback
             }
             if (nalu == 5 || nalu == 1) {
                 Json::Value data;
-                data["ts"] = 1000UL*1000UL*presentationTime.tv_sec+presentationTime.tv_usec;
+                data["ts"] = Json::Value::UInt64(1000ULL*1000*presentationTime.tv_sec+presentationTime.tv_usec);
                 std::stringstream ss;
                 for (int i = 5; (i < 8) && (i < m_sps.size()); i++) {
                     ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(m_sps[i]);
@@ -118,7 +118,7 @@ class RTSPCallback : public RTSPConnection::Callback
             if (nalu == 19 || nalu ==20 || nalu == 1) {
                 Json::Value data;
                 data["codec"] = "hev1.1.6.L93.B0";
-                data["ts"] = 1000UL*1000UL*presentationTime.tv_sec+presentationTime.tv_usec;
+                data["ts"] = Json::Value::UInt64(1000ULL*1000*presentationTime.tv_sec+presentationTime.tv_usec);
                 if (nalu == 19 || nalu == 20) {
                     data["type"] = "keyframe";
                 }
