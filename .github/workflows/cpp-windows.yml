@@ -20,7 +20,7 @@ jobs:
       run: |
           set
           where ninja
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }} -DCMAKE_MAKE_PROGRAM=ninja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang++ -DDETECT_OPENSSL=OFF .
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }} -DCMAKE_MAKE_PROGRAM=ninja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DDETECT_OPENSSL=OFF .
           ninja 
 
     - name: cpack
