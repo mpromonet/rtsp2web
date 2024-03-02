@@ -20,7 +20,7 @@ jobs:
       run: |
           set
           where ninja
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }} -DCMAKE_MAKE_PROGRAM=ninja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_FLAGS=-I"C:/Progra~1/OpenSSL-Win64/include" -DCMAKE_C_FLAGS=-I"C:/Progra~1/OpenSSL-Win64/include" .
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }} -DCMAKE_MAKE_PROGRAM=ninja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_FLAGS=-I"C:/Progra~1/OpenSSL/include" -DCMAKE_C_FLAGS=-I"C:/Progra~1/OpenSSL/include" .
           ninja 
 
     - name: cpack
