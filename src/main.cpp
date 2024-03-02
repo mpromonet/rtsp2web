@@ -15,6 +15,8 @@
 #include <string>
 #include <iostream>
 
+#include "cxxopts.hpp"
+
 #include "rtsp2ws.h"
 
 /* ---------------------------------------------------------------------------
@@ -36,73 +38,68 @@ void sighandler(int)
 ** -------------------------------------------------------------------------*/
 int main(int argc, char* argv[]) 
 {	
-	int verbose=0;
-	const char * port = "8080";
-	std::string sslCertificate;
-	std::string webroot = "html";
 	int rtptransport = RTSPConnection::RTPOVERTCP;
-	std::string nbthreads;
 
-	int c = 0;
-	while ((c = getopt (argc, argv, "hv::" "P:c:p:N:" "MUH" )) != -1)
-	{
-		switch (c)
-		{
-			case 'v': verbose = 1; if (optarg && *optarg=='v') verbose++;  break;
+	cxxopts::Options options(argv[0], " - command line options");
+	options.allow_unrecognised_options();
+	options.add_options()
+		("h,help"      , "Print usage")
 
-			case 'P': port = optarg; break;
-			case 'c': sslCertificate = optarg; break;
-			case 'N': nbthreads = optarg; break;
-			case 'p': webroot = optarg; break;	
+		("P,port"      , "Listening port"       , cxxopts::value<std::string>()->default_value("8080")) 
+		("N,thread"    , "Server number threads", cxxopts::value<std::string>()->default_value(""))
+		("v,verbose"   , "Verbose"              , cxxopts::value<int>()->default_value("0"))
+		("p,path"      , "Server root path"     , cxxopts::value<std::string>()->default_value("html"))
+		("c,sslkeycert", "Path to private key and certificate for HTTPS", cxxopts::value<std::string>()->default_value(""))
+		("M"           , "RTP over Multicast")
+		("U"           , "RTP over Unicast")
+		("H"           , "RTP over HTTP")
+		;
 
-			case 'M':	rtptransport = RTSPConnection::RTPUDPMULTICAST;  break;
-			case 'U':	rtptransport = RTSPConnection::RTPUDPUNICAST;  break;
-			case 'H':	rtptransport = RTSPConnection::RTPOVERHTTP;  break;				
+	auto result = options.parse(argc, argv);
+    if (result.count("help"))
+    {
+      std::cout << options.help() << std::endl;
+      exit(0);
+    }
 
-			case 'h':
-			{
-				std::cout << argv[0] << " [-v[v]] [-P httpport] [-c sslkeycert] url" << std::endl;
-				std::cout << "\t -v               : verbose " << std::endl;
-				std::cout << "\t -v v             : very verbose " << std::endl;
-				std::cout << "\t -P port          : server port (default "<< port << ")" << std::endl;
-				std::cout << "\t -p path          : server root path (default "<< webroot << ")" << std::endl;
-				std::cout << "\t -c sslkeycert    : path to private key and certificate for HTTPS" << std::endl;
+	std::string port = result["port"].as<std::string>();
+	std::string webroot = result["path"].as<std::string>();
+	int verbose = result["verbose"].as<int>();
+	std::string sslCertificate = result["sslkeycert"].as<std::string>();
+	std::string nbthreads = result["thread"].as<std::string>();
 
-				exit(0);
-			}
-		}
+	if (result.count("M")) rtptransport = RTSPConnection::RTPUDPMULTICAST;
+	if (result.count("U")) rtptransport = RTSPConnection::RTPUDPUNICAST;
+	if (result.count("H")) rtptransport = RTSPConnection::RTPOVERHTTP;
+
+	std::vector<std::string> urls;
+	for (auto arg : result.unmatched()) {
+		urls.push_back(arg);
 	}
-
 
 	// http options
-	std::vector<std::string> options;
-	options.push_back("document_root");
-	options.push_back(webroot);
-	options.push_back("enable_directory_listing");
-	options.push_back("no");
-	options.push_back("additional_header");
-	options.push_back("X-Frame-Options: SAMEORIGIN");
-	options.push_back("access_control_allow_origin");
-	options.push_back("*");		
-	options.push_back("listening_ports");
-	options.push_back(port);
+	std::vector<std::string> opts;
+	opts.push_back("document_root");
+	opts.push_back(webroot);
+	opts.push_back("enable_directory_listing");
+	opts.push_back("no");
+	opts.push_back("additional_header");
+	opts.push_back("X-Frame-Options: SAMEORIGIN");
+	opts.push_back("access_control_allow_origin");
+	opts.push_back("*");		
+	opts.push_back("listening_ports");
+	opts.push_back(port);
 	if (!sslCertificate.empty()) {
-		options.push_back("ssl_certificate");
-		options.push_back(sslCertificate);
+		opts.push_back("ssl_certificate");
+		opts.push_back(sslCertificate);
 	}		
 	if (!nbthreads.empty()) {
-		options.push_back("num_threads");
-		options.push_back(nbthreads);
+		opts.push_back("num_threads");
+		opts.push_back(nbthreads);
 	}		
-	std::vector<std::string> urls;
-	while (optind<argc)
-	{
-			urls.push_back(argv[optind]);
-			optind++;
-	}
 
 	// api server
-	Rtsp2Ws server(urls, options, rtptransport, verbose);
+	Rtsp2Ws server(urls, opts, rtptransport, verbose);
 	if (server.getContext() == NULL)
 	{
 		std::cout << "Cannot listen on port:" << port << std::endl; 

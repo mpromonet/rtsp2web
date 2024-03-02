@@ -4,3 +4,6 @@
 [submodule "libhttpjsonserver"]
 	path = libhttpjsonserver
 	url = https://github.com/mpromonet/libhttpjsonserver
+[submodule "cxxopts"]
+	path = cxxopts
+	url = https://github.com/jarro2783/cxxopts

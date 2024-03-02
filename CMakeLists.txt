@@ -26,6 +26,10 @@ target_link_libraries (${PROJECT_NAME} liblive555helper)
 add_subdirectory(libhttpjsonserver EXCLUDE_FROM_ALL)
 target_link_libraries (${PROJECT_NAME} httpjsonserver)
 
+# cxxopts
+add_subdirectory(cxxopts EXCLUDE_FROM_ALL)
+target_link_libraries (${PROJECT_NAME} cxxopts)
+
 # install
 install (TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
 install (DIRECTORY html/ DESTINATION share/${PROJECT_NAME})
