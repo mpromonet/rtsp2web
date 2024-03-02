@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
 {	
 	int rtptransport = RTSPConnection::RTPOVERTCP;
 
-	cxxopts::Options options(argv[0], " - command line options");
+	cxxopts::Options options(argv[0]);
 	options.allow_unrecognised_options();
 	options.add_options()
 		("h,help"      , "Print usage")
