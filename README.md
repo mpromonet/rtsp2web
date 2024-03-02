@@ -36,6 +36,8 @@ The container entry point is the application, then you can :
 
         docker run ghcr.io/mpromonet/rtsp2ws -h
 
-* run the container specifying some paramters :
+* run the container specifying some paramaters :
 
-        docker run  -p 8080:8080 ghcr.io/mpromonet/rtsp2ws rtsp://37.157.51.30/axis-media/media.amp rtsp://71.83.5.156/axis-media/media.amp rtsp://86.44.41.160/axis-media/media.amp 
+        docker run -p 8080:8080 ghcr.io/mpromonet/rtsp2ws rtsp://37.157.51.30/axis-media/media.amp rtsp://71.83.5.156/axis-media/media.amp rtsp://86.44.41.160/axis-media/media.amp 
+        docker run -p 8080:8080 -v $PWD/keycert.pem:/tmp/keycert.pem ghcr.io/mpromonet/rtsp2ws -P 8080s -c /tmp/keycert.pem rtsp://37.157.51.30/axis-media/media.amp rtsp://71.83.5.156/axis-media/media.amp
+
