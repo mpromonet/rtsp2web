@@ -7,14 +7,12 @@
 
 class VideoStream {
     constructor(videoCanvas) {
-        this.frameResolved = null;
         this.metadata = {media:'', codec: '', ts: 0, type: ''};
         this.reconnectTimer = null;
         this.ws = null;
 
-        this.videoContext = videoCanvas.getContext("2d");        
-
-        this.decoder = this.createDecoder();
+        this.videoContext = videoCanvas.getContext("2d");
+        this.videoDecoder = this.createVideoDecoder();
     }
 
     clearFrame() {
@@ -28,9 +26,9 @@ class VideoStream {
         frame.close();
     }
 
-    createDecoder() {
+    createVideoDecoder() {
         this.clearFrame();
-        return   this.decoder = new VideoDecoder({
+        return new VideoDecoder({
                 output: (frame) => this.displayFrame(frame),
                 error: (e) => console.log(e.message),
         });
@@ -44,7 +42,7 @@ class VideoStream {
                 data,
             });
             this.decoder.decode(chunk);
-            return new Promise(r => this.frameResolved = r);
+            return new Promise.resolve();
         } else {
             return Promise.reject(`${this.metadata.codec} decoder not configured`);
         }
@@ -92,8 +90,7 @@ class VideoStream {
             if (data instanceof ArrayBuffer) {
                 const bytes = new Uint8Array(data);
                 if (this.metadata.media === 'video') {
-                    const frame = await this.onFrame(bytes);
-                    this.displayFrame(frame);
+                    await this.onFrame(bytes);
                 } else if (this.metadata.media === 'audio') {
                 }
             } else if (typeof data === 'string') {
@@ -125,6 +122,6 @@ class VideoStream {
             this.ws.close();
         }
         this.ws = null;
-        this.decoder = this.createDecoder();
+        this.decoder = this.createVideoDecoder();
     }
 }

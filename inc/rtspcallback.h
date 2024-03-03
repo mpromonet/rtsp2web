@@ -48,7 +48,7 @@ class RTSPCallback : public RTSPConnection::Callback
                     std::cout << codec << " not supported" << std::endl;
                 }
             } else if (strcmp(media, "audio") == 0) {
-                if (strcmp(codec, "MPEG4-GENERIC") == 0) {
+                if (strcmp(codec, "MPA") == 0) {
                     m_medias[id] = media;
                     m_codecs[id] = codec;
                     ret = true;
@@ -69,7 +69,7 @@ class RTSPCallback : public RTSPConnection::Callback
                 this->onH265Data(id, buffer, size, presentationTime);
             } else if (codec == "JPEG") {
                 this->onDefaultData(id, buffer, size, presentationTime);
-            } else if (codec == "MPEG4-GENERIC") {
+            } else if (codec == "MPA") {
                 this->onDefaultData(id, buffer, size, presentationTime);
             }
             return true;
