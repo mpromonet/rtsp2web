@@ -42,7 +42,7 @@ class VideoStream {
                 data,
             });
             this.decoder.decode(chunk);
-            return new Promise.resolve();
+            return Promise.resolve();
         } else {
             return Promise.reject(`${this.metadata.codec} decoder not configured`);
         }
