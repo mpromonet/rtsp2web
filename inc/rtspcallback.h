@@ -31,32 +31,46 @@ class RTSPCallback : public RTSPConnection::Callback
             std::cout << id << " " << media << "/" <<  codec << std::endl;
 
             bool ret = false;
-            if (strcmp(codec, "H264") == 0) {
-                m_codec = codec;
-                ret = this->onH264Config(id, sdp);
-            } else if (strcmp(codec, "H265") == 0) {
-                m_codec = codec;
-                ret =  this->onH265Config(id, sdp);
-            } else if (strcmp(codec, "JPEG") == 0) {
-                m_codec = codec;
-                ret = true;
+            if (strcmp(media, "video") == 0) {
+                if (strcmp(codec, "H264") == 0) {
+                    m_medias[id] = media;
+                    m_codecs[id] = codec;
+                    ret = this->onH264Config(id, sdp);
+                } else if (strcmp(codec, "H265") == 0) {
+                    m_medias[id] = media;
+                    m_codecs[id] = codec;
+                    ret =  this->onH265Config(id, sdp);
+                } else if (strcmp(codec, "JPEG") == 0) {
+                    m_medias[id] = media;
+                    m_codecs[id] = codec;
+                    ret = true;
+                } else {
+                    std::cout << codec << " not supported" << std::endl;
+                }
+            } else if (strcmp(media, "audio") == 0) {
+                if (strcmp(codec, "MPEG4-GENERIC") == 0) {
+                    m_medias[id] = media;
+                    m_codecs[id] = codec;
+                    ret = true;
+                } else {
+                    std::cout << codec << " not supported" << std::endl;
+                }
             } else {
-                std::cout << codec << " not supported" << std::endl;
+                std::cout << media << " not supported" << std::endl;
             }
             return ret;
         }
         
         virtual bool    onData(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) {
-            if (m_codec == "H264") {
+            std::string codec = m_codecs[id];
+            if (codec == "H264") {
                 this->onH264Data(id, buffer, size, presentationTime);
-            } else if (m_codec == "H265") {
+            } else if (codec == "H265") {
                 this->onH265Data(id, buffer, size, presentationTime);
-            } else if (m_codec == "JPEG") {
-                Json::Value data;
-                data["codec"] = m_codec;
-                data["ts"] = Json::Value::UInt64(1000ULL*1000*presentationTime.tv_sec+presentationTime.tv_usec);
-                m_httpServer.publishJSON(m_uri, data);                    
-                m_httpServer.publishBin(m_uri, (const char*)buffer, size);                
+            } else if (codec == "JPEG") {
+                this->onDefaultData(id, buffer, size, presentationTime);
+            } else if (codec == "MPEG4-GENERIC") {
+                this->onDefaultData(id, buffer, size, presentationTime);
             }
             return true;
         }
@@ -74,6 +88,15 @@ class RTSPCallback : public RTSPConnection::Callback
         }	
 
     private:
+        void onDefaultData(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) {
+            Json::Value data;
+            data["media"] = m_medias[id];
+            data["codec"] = m_codecs[id];
+            data["ts"] = Json::Value::UInt64(1000ULL*1000*presentationTime.tv_sec+presentationTime.tv_usec);
+            m_httpServer.publishJSON(m_uri, data);                    
+            m_httpServer.publishBin(m_uri, (const char*)buffer, size);
+        }
+
         void onH264Data(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) {
             std::string buf(buffer, buffer+size);
             int nalu = buffer[4] & 0x1F;
@@ -92,6 +115,7 @@ class RTSPCallback : public RTSPConnection::Callback
                 for (int i = 5; (i < 8) && (i < m_sps.size()); i++) {
                     ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(m_sps[i]);
                 }
+                data["media"] = m_medias[id];
                 data["codec"] = "avc1." + ss.str();   
                 if (nalu == 5) {
                     data["type"] = "keyframe";
@@ -117,6 +141,7 @@ class RTSPCallback : public RTSPConnection::Callback
             }
             if (nalu == 19 || nalu ==20 || nalu == 1) {
                 Json::Value data;
+                data["media"] = m_medias[id];
                 data["codec"] = "hev1.1.6.L93.B0";
                 data["ts"] = Json::Value::UInt64(1000ULL*1000*presentationTime.tv_sec+presentationTime.tv_usec);
                 if (nalu == 19 || nalu == 20) {
@@ -187,10 +212,11 @@ class RTSPCallback : public RTSPConnection::Callback
         }
 
     private:
-        HttpServerRequestHandler&   m_httpServer;
-        std::string                 m_uri;
-        std::string                 m_codec;
-        std::string                 m_vps;
-        std::string                 m_sps;
-        std::string                 m_pps;
+        HttpServerRequestHandler&               m_httpServer;
+        std::string                             m_uri;
+        std::map<std::string,std::string>       m_medias;
+        std::map<std::string,std::string>       m_codecs;
+        std::string                             m_vps;
+        std::string                             m_sps;
+        std::string                             m_pps;
 };

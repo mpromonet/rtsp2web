@@ -8,7 +8,7 @@
 class VideoStream {
     constructor(videoCanvas) {
         this.frameResolved = null;
-        this.metadata = {codec: '', ts: 0, type: ''};
+        this.metadata = {media:'', codec: '', ts: 0, type: ''};
         this.reconnectTimer = null;
         this.ws = null;
 
@@ -88,16 +88,19 @@ class VideoStream {
 
     async onMessage(message) {
         const { data } = message;
-        if (data instanceof ArrayBuffer) {
-            const bytes = new Uint8Array(data);
-            try {
-                const frame = await this.onFrame(bytes);
-                this.displayFrame(frame);
-            } catch (e) {
-                console.warn(e);
+        try {
+            if (data instanceof ArrayBuffer) {
+                const bytes = new Uint8Array(data);
+                if (this.metadata.media === 'video') {
+                    const frame = await this.onFrame(bytes);
+                    this.displayFrame(frame);
+                } else if (this.metadata.media === 'audio') {
+                }
+            } else if (typeof data === 'string') {
+                this.metadata = JSON.parse(data);
             }
-        } else if (typeof data === 'string') {
-            this.metadata = JSON.parse(data);
+        } catch (e) {
+            console.warn(e);
         }
     }
 
