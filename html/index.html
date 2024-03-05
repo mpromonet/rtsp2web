@@ -22,7 +22,11 @@
     const canvas = document.createElement("canvas");
     video.srcObject = canvas.captureStream();
     video.play();
-    const videoStream = new VideoStream(canvas);
+
+    const audioContext = new AudioContext();
+    const audioTrack = audioContext.createMediaElementSource(video);
+
+    const videoStream = new VideoStream(canvas,audioTrack);
 
     function selectStream(stream) {
         for (const opt of menu.getElementsByTagName('a')) {

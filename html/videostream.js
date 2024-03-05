@@ -6,13 +6,16 @@
 ** -------------------------------------------------------------------------*/
 
 class VideoStream {
-    constructor(videoCanvas) {
+    constructor(videoCanvas, audioTrack) {
         this.metadata = {media:'', codec: '', ts: 0, type: ''};
         this.reconnectTimer = null;
         this.ws = null;
 
         this.videoContext = videoCanvas.getContext("2d");
         this.videoDecoder = this.createVideoDecoder();
+
+        this.audioTrack = audioTrack;
+        this.audioDecoder = this.createAudioDecoder();        
     }
 
     clearFrame() {
@@ -30,6 +33,35 @@ class VideoStream {
         this.clearFrame();
         return new VideoDecoder({
                 output: (frame) => this.displayFrame(frame),
+                error: (e) => console.log(e.message),
+        });
+    }
+
+    async playAudioFrame(frame) {
+        const { numberOfChannels, numberOfFrames, sampleRate } = frame;
+
+        const interleavingBuffers = new Array(numberOfChannels);
+        for (let i = 0; i < numberOfChannels; i++) {
+            interleavingBuffers[i] = new Float32Array(numberOfFrames);
+            frame.copyTo(interleavingBuffers[i], { planeIndex: i });
+        }
+        const audioBuffer = audioContext.createBuffer(numberOfChannels, numberOfFrames, sampleRate);
+        for (let i = 0; i < 1; i++) {
+            audioBuffer.getChannelData(i).set(interleavingBuffers[i]);
+        }
+
+        const source = this.audioTrack.context.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(this.audioTrack.context.destination);
+        source.start();
+        await new Promise((r) => source.onended = r );
+
+        frame.close();
+    }
+
+    createAudioDecoder() {
+        return new AudioDecoder({
+                output: (frame) => this.playAudioFrame(frame),
                 error: (e) => console.log(e.message),
         });
     }
@@ -74,13 +106,44 @@ class VideoStream {
         return new VideoFrame(img, {timestamp: this.metadata.ts});
     }
 
-    onFrame(data) {
+    onVideoFrame(data) {
         if (this.metadata.codec.startsWith('avc1') || this.metadata.codec.startsWith('hev1') ) {
             return this.onH26xFrame(data);
-        } else if (this.metadata.codec === 'JPEG') {
+        } else if (this.metadata.codec === 'jpeg') {
             return this.onJPEGFrame(data);
         } else {
             return Promise.reject(`Unknown format`);
+        }
+    }
+
+    async onAudioFrame(data) {
+        if (this.audioDecoder.state !== "configured") {
+            const codec = this.metadata.codec;
+            const sampleRate = 48000;
+            const numberOfChannels = 2;
+            const config = { codec, sampleRate, numberOfChannels };
+            const support = await AudioDecoder.isConfigSupported(config);
+            if (support.supported) {
+                console.log(`decoder supported with codec ${codec}`);
+                await this.audioDecoder.configure(config);
+            } else {
+                return Promise.reject(`${codec} is not supported`);
+            }
+        }
+        return this.decodeAudioFrame(data);
+    }
+
+    async decodeAudioFrame(data) {
+        if (this.audioDecoder.state === "configured") {
+            const chunk = new EncodedAudioChunk({
+                timestamp: this.metadata.ts,
+                type: "key",
+                data,
+            });
+            await this.audioDecoder.decode(chunk);
+            return Promise.resolve();
+        } else {
+            return Promise.reject(`${this.metadata.codec} decoder not configured`);
         }
     }
 
@@ -90,8 +153,9 @@ class VideoStream {
             if (data instanceof ArrayBuffer) {
                 const bytes = new Uint8Array(data);
                 if (this.metadata.media === 'video') {
-                    await this.onFrame(bytes);
+                    await this.onVideoFrame(bytes);
                 } else if (this.metadata.media === 'audio') {
+                    await this.onAudioFrame(bytes);
                 }
             } else if (typeof data === 'string') {
                 this.metadata = JSON.parse(data);

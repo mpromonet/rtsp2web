@@ -48,7 +48,15 @@ class RTSPCallback : public RTSPConnection::Callback
                     std::cout << codec << " not supported" << std::endl;
                 }
             } else if (strcmp(media, "audio") == 0) {
-                if (strcmp(codec, "MPA") == 0) {
+                if (strcmp(codec, "L16") == 0) {
+                    m_medias[id] = media;
+                    m_codecs[id] = codec;
+                    ret = true;
+                } else if (strcmp(codec, "MPA") == 0) {
+                    m_medias[id] = media;
+                    m_codecs[id] = codec;
+                    ret = true;
+                } else if (strcmp(codec, "OPUS") == 0) {
                     m_medias[id] = media;
                     m_codecs[id] = codec;
                     ret = true;
@@ -68,9 +76,13 @@ class RTSPCallback : public RTSPConnection::Callback
             } else if (codec == "H265") {
                 this->onH265Data(id, buffer, size, presentationTime);
             } else if (codec == "JPEG") {
-                this->onDefaultData(id, buffer, size, presentationTime);
+                this->onDefaultData(id, "jpeg", buffer, size, presentationTime);
+            } else if (codec == "L16") {
+                this->onDefaultData(id, "pcm-s16", buffer, size, presentationTime);
             } else if (codec == "MPA") {
-                this->onDefaultData(id, buffer, size, presentationTime);
+                this->onDefaultData(id, "mp3", buffer, size, presentationTime);
+            } else if (codec == "OPUS") {
+                this->onDefaultData(id, "opus", buffer, size, presentationTime);
             }
             return true;
         }
@@ -88,10 +100,10 @@ class RTSPCallback : public RTSPConnection::Callback
         }	
 
     private:
-        void onDefaultData(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) {
+        void onDefaultData(const char* id, const std::string& codec, unsigned char* buffer, ssize_t size, struct timeval presentationTime) {
             Json::Value data;
             data["media"] = m_medias[id];
-            data["codec"] = m_codecs[id];
+            data["codec"] = codec;
             data["ts"] = Json::Value::UInt64(1000ULL*1000*presentationTime.tv_sec+presentationTime.tv_usec);
             m_httpServer.publishJSON(m_uri, data);                    
             m_httpServer.publishBin(m_uri, (const char*)buffer, size);
