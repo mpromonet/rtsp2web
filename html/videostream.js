@@ -42,10 +42,10 @@ class VideoStream {
 
         const audioBuffer = audioContext.createBuffer(numberOfChannels, numberOfFrames, sampleRate);
         if (format.startsWith('planar')) {
-            for (let channel = 0; i < numberOfChannels; i++) {
+            for (let channel = 0; channel < numberOfChannels; channel++) {
                 const channelData = new Float32Array(numberOfFrames);
                 frame.copyTo(channelData, { planeIndex: channel });
-                audioBuffer.getChannelData(i).set(channelData);
+                audioBuffer.getChannelData(channel).set(channelData);
             }
         } else {
             const interleavingBuffer = new Float32Array(numberOfFrames*numberOfChannels);
