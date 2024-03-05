@@ -38,16 +38,25 @@ class VideoStream {
     }
 
     async playAudioFrame(frame) {
-        const { numberOfChannels, numberOfFrames, sampleRate } = frame;
+        const { numberOfChannels, numberOfFrames, sampleRate, format } = frame;
 
-        const interleavingBuffers = new Array(numberOfChannels);
-        for (let i = 0; i < numberOfChannels; i++) {
-            interleavingBuffers[i] = new Float32Array(numberOfFrames);
-            frame.copyTo(interleavingBuffers[i], { planeIndex: i });
-        }
         const audioBuffer = audioContext.createBuffer(numberOfChannels, numberOfFrames, sampleRate);
-        for (let i = 0; i < 1; i++) {
-            audioBuffer.getChannelData(i).set(interleavingBuffers[i]);
+        if (format.startsWith('planar')) {
+            for (let channel = 0; i < numberOfChannels; i++) {
+                const channelData = new Float32Array(numberOfFrames);
+                frame.copyTo(channelData, { planeIndex: channel });
+                audioBuffer.getChannelData(i).set(channelData);
+            }
+        } else {
+            const interleavingBuffer = new Float32Array(numberOfFrames*numberOfChannels);
+            frame.copyTo(interleavingBuffer, { planeIndex: 0 });
+            for (let channel = 0; channel < numberOfChannels; channel++) {
+                const channelData = new Float32Array(numberOfFrames);
+                for (let i = 0; i < numberOfFrames; i++) {
+                    channelData[i] = interleavingBuffer[i * numberOfChannels + channel];
+                }
+                audioBuffer.getChannelData(channel).set(channelData);
+            }            
         }
 
         const source = this.audioTrack.context.createBufferSource();
