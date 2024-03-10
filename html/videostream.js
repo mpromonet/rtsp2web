@@ -6,7 +6,7 @@
 ** -------------------------------------------------------------------------*/
 
 class VideoStream {
-    constructor(videoCanvas, audioTrack) {
+    constructor(videoCanvas, audioContext) {
         this.metadata = {media:'', codec: '', ts: 0, type: ''};
         this.reconnectTimer = null;
         this.ws = null;
@@ -14,7 +14,8 @@ class VideoStream {
         this.videoContext = videoCanvas.getContext("2d");
         this.videoDecoder = this.createVideoDecoder();
 
-        this.audioTrack = audioTrack;
+        this.audioContext = audioContext;
+        this.audioBufferQueue = { bufferQueue: [], nextBufferTime: 0 };
         this.audioDecoder = this.createAudioDecoder();        
     }
 
@@ -37,10 +38,10 @@ class VideoStream {
         });
     }
 
-    async playAudioFrame(frame) {
+    async processAudioFrame(frame) {
         const { numberOfChannels, numberOfFrames, sampleRate, format } = frame;
 
-        const audioBuffer = this.audioTrack.context.createBuffer(numberOfChannels, numberOfFrames, sampleRate);
+        const audioBuffer = this.audioContext.createBuffer(numberOfChannels, numberOfFrames, sampleRate);
         if (format.endsWith('-planar')) {
             for (let channel = 0; channel < numberOfChannels; channel++) {
                 const channelData = new Float32Array(numberOfFrames);
@@ -59,17 +60,37 @@ class VideoStream {
             }            
         }
 
-        const source = this.audioTrack.context.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(this.audioTrack.context.destination);
-        source.start();
+        this.queueAudioBuffer(audioBuffer);
 
         frame.close();
     }
 
+    queueAudioBuffer(audioBuffer) {
+        const source = this.audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(this.audioContext.destination);
+
+        if (this.audioContext.currentTime > this.audioBufferQueue.nextBufferTime) {
+            source.start();
+            this.audioBufferQueue.nextBufferTime = this.audioContext.currentTime + audioBuffer.duration;
+        } else {
+            source.start(this.audioBufferQueue.nextBufferTime);
+            this.audioBufferQueue.nextBufferTime += audioBuffer.duration;
+        }
+
+        this.audioBufferQueue.bufferQueue.push(source);
+
+        source.onended = () => {
+            const index = this.audioBufferQueue.bufferQueue.indexOf(source);
+            if (index !== -1) {
+                this.audioBufferQueue.bufferQueue.splice(index, 1);
+            }
+        };
+    }
+
     createAudioDecoder() {
         return new AudioDecoder({
-                output: (frame) => this.playAudioFrame(frame),
+                output: (frame) => this.processAudioFrame(frame),
                 error: (e) => console.log(e.message),
         });
     }

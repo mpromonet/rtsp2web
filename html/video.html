@@ -15,12 +15,14 @@
 </body>
 <script>
     fetch("/api/version").then(r => r.json()).then(r => version.innerText = r);
+    const audioContext = new AudioContext();
     const canvas = document.createElement("canvas");
     video.srcObject = canvas.captureStream();
+    video.addEventListener('play', () => audioContext.resume());
+    video.addEventListener('pause', () => audioContext.suspend());
     video.play();
-    const videoStream = new VideoStream(canvas);
+    const videoStream = new VideoStream(canvas, audioContext);    
     videoStream.connect(location.search.slice(1) || "/ws0");
-    window.onbeforeunload = () => videoStream.close();    
 </script>
 
 </html>
