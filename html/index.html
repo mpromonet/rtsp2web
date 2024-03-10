@@ -27,6 +27,7 @@
     const audioTrack = audioContext.createMediaElementSource(video);
 
     const videoStream = new VideoStream(canvas,audioTrack);
+    window.onbeforeunload = () => videoStream.close();
 
     function selectStream(stream) {
         for (const opt of menu.getElementsByTagName('a')) {

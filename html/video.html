@@ -20,6 +20,7 @@
     video.play();
     const videoStream = new VideoStream(canvas);
     videoStream.connect(location.search.slice(1) || "/ws0");
+    window.onbeforeunload = () => videoStream.close();    
 </script>
 
 </html>

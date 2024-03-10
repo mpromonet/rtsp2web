@@ -24,5 +24,7 @@
         
         const worker = new Worker('worker.js');        
         worker.postMessage({ canvas: offscreenCanvas, url: location.search.slice(1) || "/ws0" }, [offscreenCanvas]);
+
+        window.onbeforeunload = () => worker.terminate();
     </script>        
 </html>

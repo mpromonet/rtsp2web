@@ -45,7 +45,7 @@ class VideoStream {
             for (let channel = 0; channel < numberOfChannels; channel++) {
                 const channelData = new Float32Array(numberOfFrames);
                 frame.copyTo(channelData, { planeIndex: channel });
-                audioBuffer.getChannelData(channel).set(channelData);
+                audioBuffer.copyToChannel(channelData, channel);
             }
         } else {
             const interleavingBuffer = new Float32Array(numberOfFrames*numberOfChannels);
@@ -55,7 +55,7 @@ class VideoStream {
                 for (let i = 0; i < numberOfFrames; i++) {
                     channelData[i] = interleavingBuffer[i * numberOfChannels + channel];
                 }
-                audioBuffer.getChannelData(channel).set(channelData);
+                audioBuffer.copyToChannel(channelData, channel);
             }            
         }
 
@@ -63,7 +63,6 @@ class VideoStream {
         source.buffer = audioBuffer;
         source.connect(this.audioTrack.context.destination);
         source.start();
-        await new Promise((r) => source.onended = r );
 
         frame.close();
     }
