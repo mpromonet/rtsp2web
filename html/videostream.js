@@ -41,7 +41,7 @@ class VideoStream {
         const { numberOfChannels, numberOfFrames, sampleRate, format } = frame;
 
         const audioBuffer = this.audioTrack.context.createBuffer(numberOfChannels, numberOfFrames, sampleRate);
-        if (format.startsWith('planar')) {
+        if (format.endsWith('-planar')) {
             for (let channel = 0; channel < numberOfChannels; channel++) {
                 const channelData = new Float32Array(numberOfFrames);
                 frame.copyTo(channelData, { planeIndex: channel });
