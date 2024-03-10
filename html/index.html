@@ -25,6 +25,8 @@
 
     const audioContext = new AudioContext();
     const audioTrack = audioContext.createMediaElementSource(video);
+    video.addEventListener('play', () => audioContext.resume());
+    video.addEventListener('pause', () => audioContext.suspend());
 
     const videoStream = new VideoStream(canvas,audioTrack);
     window.onbeforeunload = () => videoStream.close();
