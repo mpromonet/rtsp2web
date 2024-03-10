@@ -37,6 +37,10 @@ export class VideoStream {
         }
     }
 
+    setVolume(volume) {
+        this.audioProcessor.setVolume(volume);
+    }
+    
     connect(stream) {
         let wsurl = new URL(stream, location.href);
         wsurl.protocol = wsurl.protocol.replace("http", "ws");

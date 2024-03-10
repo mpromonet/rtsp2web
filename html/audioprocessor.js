@@ -10,6 +10,8 @@ export class AudioProcessor {
     constructor(audioContext) {
         this.audioContext = audioContext;
         this.audioBufferQueue = { bufferQueue: [], nextBufferTime: 0 };
+        this.gain = this.audioContext.createGain();
+        this.gain.connect(this.audioContext.destination);
         this.decoder = this.createAudioDecoder();
     }
 
@@ -43,7 +45,7 @@ export class AudioProcessor {
     queueAudioBuffer(audioBuffer) {
         const source = this.audioContext.createBufferSource();
         source.buffer = audioBuffer;
-        source.connect(this.audioContext.destination);
+        source.connect(this.gain);
 
         if (this.audioContext.currentTime > this.audioBufferQueue.nextBufferTime) {
             source.start();
@@ -63,6 +65,10 @@ export class AudioProcessor {
         };
     }
 
+    setVolume(volume) {
+        this.gain.gain.value = volume;
+    }
+    
     createAudioDecoder() {
         return new AudioDecoder({
                 output: (frame) => this.processAudioFrame(frame),
