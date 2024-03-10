@@ -2,7 +2,6 @@
 <head>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" type="text/css" href="style.css">
-    <script src="./videostream.js"></script>
 </head>
 <body>
     <header>
@@ -16,9 +15,10 @@
             <div id="version"></div>
     </footer>
 </body>
-<script>
+<script type="module">
     fetch("/api/version").then(r => r.json()).then(r => version.innerText = r);
 
+    import { VideoStream } from './videostream.js';
     const audioContext = new AudioContext();
     const canvas = document.createElement("canvas");
     video.srcObject = canvas.captureStream();

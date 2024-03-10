@@ -5,175 +5,18 @@
 **
 ** -------------------------------------------------------------------------*/
 
-class VideoStream {
+import { VideoProcessor } from './videoprocessor.js';
+import { AudioProcessor } from './audioprocessor.js';
+
+export class VideoStream {
     constructor(videoCanvas, audioContext) {
         this.metadata = {media:'', codec: '', ts: 0, type: ''};
         this.reconnectTimer = null;
         this.ws = null;
 
-        this.videoContext = videoCanvas.getContext("2d");
-        this.videoDecoder = this.createVideoDecoder();
+        this.videoProcessor = new VideoProcessor(videoCanvas);
 
-        this.audioContext = audioContext;
-        this.audioBufferQueue = { bufferQueue: [], nextBufferTime: 0 };
-        this.audioDecoder = this.createAudioDecoder();        
-    }
-
-    clearFrame() {
-        this.videoContext.clearRect(0, 0, this.videoContext.canvas.width, this.videoContext.canvas.height);
-    }
-
-    displayFrame(frame) {
-        this.videoContext.canvas.width = frame.displayWidth;
-        this.videoContext.canvas.height = frame.displayHeight;
-        this.videoContext.drawImage(frame, 0, 0);
-        frame.close();
-    }
-
-    createVideoDecoder() {
-        this.clearFrame();
-        return new VideoDecoder({
-                output: (frame) => this.displayFrame(frame),
-                error: (e) => console.log(e.message),
-        });
-    }
-
-    async processAudioFrame(frame) {
-        const { numberOfChannels, numberOfFrames, sampleRate, format } = frame;
-
-        const audioBuffer = this.audioContext.createBuffer(numberOfChannels, numberOfFrames, sampleRate);
-        if (format.endsWith('-planar')) {
-            for (let channel = 0; channel < numberOfChannels; channel++) {
-                const channelData = new Float32Array(numberOfFrames);
-                frame.copyTo(channelData, { planeIndex: channel });
-                audioBuffer.copyToChannel(channelData, channel);
-            }
-        } else {
-            const interleavingBuffer = new Float32Array(numberOfFrames*numberOfChannels);
-            frame.copyTo(interleavingBuffer, { planeIndex: 0 });
-            for (let channel = 0; channel < numberOfChannels; channel++) {
-                const channelData = new Float32Array(numberOfFrames);
-                for (let i = 0; i < numberOfFrames; i++) {
-                    channelData[i] = interleavingBuffer[i * numberOfChannels + channel];
-                }
-                audioBuffer.copyToChannel(channelData, channel);
-            }            
-        }
-
-        this.queueAudioBuffer(audioBuffer);
-
-        frame.close();
-    }
-
-    queueAudioBuffer(audioBuffer) {
-        const source = this.audioContext.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(this.audioContext.destination);
-
-        if (this.audioContext.currentTime > this.audioBufferQueue.nextBufferTime) {
-            source.start();
-            this.audioBufferQueue.nextBufferTime = this.audioContext.currentTime + audioBuffer.duration;
-        } else {
-            source.start(this.audioBufferQueue.nextBufferTime);
-            this.audioBufferQueue.nextBufferTime += audioBuffer.duration;
-        }
-
-        this.audioBufferQueue.bufferQueue.push(source);
-
-        source.onended = () => {
-            const index = this.audioBufferQueue.bufferQueue.indexOf(source);
-            if (index !== -1) {
-                this.audioBufferQueue.bufferQueue.splice(index, 1);
-            }
-        };
-    }
-
-    createAudioDecoder() {
-        return new AudioDecoder({
-                output: (frame) => this.processAudioFrame(frame),
-                error: (e) => console.log(e.message),
-        });
-    }
-
-    async decodeFrame(data) {
-        if (this.decoder.state === "configured") {
-            const chunk = new EncodedVideoChunk({
-                timestamp: this.metadata.ts,
-                type: "key",
-                data,
-            });
-            this.decoder.decode(chunk);
-            return Promise.resolve();
-        } else {
-            return Promise.reject(`${this.metadata.codec} decoder not configured`);
-        }
-    }
-
-    async onH26xFrame(data) {
-        if (this.decoder.state !== "configured" && this.metadata.type === "keyframe" ) {
-            const codec = this.metadata.codec;
-            const config = { codec };
-            const support = await VideoDecoder.isConfigSupported(config);
-            if (support.supported) {
-                console.log(`decoder supported with codec ${codec}`);
-                this.decoder.configure(config);
-            } else {
-                return Promise.reject(`${codec} is not supported`);
-            }
-        }
-        return this.decodeFrame(data);
-    }
-
-    async onJPEGFrame(data) {
-        let binaryStr = "";
-        for (let i = 0; i < data.length; i++) {
-          binaryStr += String.fromCharCode(data[i]);
-        }
-        const img = new Image();
-        img.src = "data:image/jpeg;base64," + btoa(binaryStr);
-        await new Promise(r => img.onload=r);
-        return new VideoFrame(img, {timestamp: this.metadata.ts});
-    }
-
-    onVideoFrame(data) {
-        if (this.metadata.codec.startsWith('avc1') || this.metadata.codec.startsWith('hev1') ) {
-            return this.onH26xFrame(data);
-        } else if (this.metadata.codec === 'jpeg') {
-            return this.onJPEGFrame(data);
-        } else {
-            return Promise.reject(`Unknown format`);
-        }
-    }
-
-    async onAudioFrame(data) {
-        if (this.audioDecoder.state !== "configured") {
-            const codec = this.metadata.codec;
-            const sampleRate = 48000;
-            const numberOfChannels = 2;
-            const config = { codec, sampleRate, numberOfChannels };
-            const support = await AudioDecoder.isConfigSupported(config);
-            if (support.supported) {
-                console.log(`decoder supported with codec ${codec}`);
-                await this.audioDecoder.configure(config);
-            } else {
-                return Promise.reject(`${codec} is not supported`);
-            }
-        }
-        return this.decodeAudioFrame(data);
-    }
-
-    async decodeAudioFrame(data) {
-        if (this.audioDecoder.state === "configured") {
-            const chunk = new EncodedAudioChunk({
-                timestamp: this.metadata.ts,
-                type: "key",
-                data,
-            });
-            await this.audioDecoder.decode(chunk);
-            return Promise.resolve();
-        } else {
-            return Promise.reject(`${this.metadata.codec} decoder not configured`);
-        }
+        this.audioProcessor = new AudioProcessor(audioContext);
     }
 
     async onMessage(message) {
@@ -182,9 +25,9 @@ class VideoStream {
             if (data instanceof ArrayBuffer) {
                 const bytes = new Uint8Array(data);
                 if (this.metadata.media === 'video') {
-                    await this.onVideoFrame(bytes);
+                    await this.videoProcessor.onVideoFrame(this.metadata, bytes);
                 } else if (this.metadata.media === 'audio') {
-                    await this.onAudioFrame(bytes);
+                    await this.audioProcessor.onAudioFrame(this.metadata, bytes);
                 }
             } else if (typeof data === 'string') {
                 this.metadata = JSON.parse(data);
@@ -215,6 +58,6 @@ class VideoStream {
             this.ws.close();
         }
         this.ws = null;
-        this.decoder = this.createVideoDecoder();
+        this.videoProcessor.reset();
     }
 }

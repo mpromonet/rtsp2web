@@ -1,0 +1,103 @@
+/* ---------------------------------------------------------------------------
+** This software is in the public domain, furnished "as is", without technical
+** support, and with no warranty, express or implied, as to its usefulness for
+** any purpose.
+**
+** -------------------------------------------------------------------------*/
+
+
+export class AudioProcessor {
+    constructor(audioContext) {
+        this.audioContext = audioContext;
+        this.audioBufferQueue = { bufferQueue: [], nextBufferTime: 0 };
+        this.decoder = this.createAudioDecoder();
+    }
+
+    async processAudioFrame(frame) {
+        const { numberOfChannels, numberOfFrames, sampleRate, format } = frame;
+
+        const audioBuffer = this.audioContext.createBuffer(numberOfChannels, numberOfFrames, sampleRate);
+        if (format.endsWith('-planar')) {
+            for (let channel = 0; channel < numberOfChannels; channel++) {
+                const channelData = new Float32Array(numberOfFrames);
+                frame.copyTo(channelData, { planeIndex: channel });
+                audioBuffer.copyToChannel(channelData, channel);
+            }
+        } else {
+            const interleavingBuffer = new Float32Array(numberOfFrames*numberOfChannels);
+            frame.copyTo(interleavingBuffer, { planeIndex: 0 });
+            for (let channel = 0; channel < numberOfChannels; channel++) {
+                const channelData = new Float32Array(numberOfFrames);
+                for (let i = 0; i < numberOfFrames; i++) {
+                    channelData[i] = interleavingBuffer[i * numberOfChannels + channel];
+                }
+                audioBuffer.copyToChannel(channelData, channel);
+            }            
+        }
+
+        this.queueAudioBuffer(audioBuffer);
+
+        frame.close();
+    }
+
+    queueAudioBuffer(audioBuffer) {
+        const source = this.audioContext.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(this.audioContext.destination);
+
+        if (this.audioContext.currentTime > this.audioBufferQueue.nextBufferTime) {
+            source.start();
+            this.audioBufferQueue.nextBufferTime = this.audioContext.currentTime + audioBuffer.duration;
+        } else {
+            source.start(this.audioBufferQueue.nextBufferTime);
+            this.audioBufferQueue.nextBufferTime += audioBuffer.duration;
+        }
+
+        this.audioBufferQueue.bufferQueue.push(source);
+
+        source.onended = () => {
+            const index = this.audioBufferQueue.bufferQueue.indexOf(source);
+            if (index !== -1) {
+                this.audioBufferQueue.bufferQueue.splice(index, 1);
+            }
+        };
+    }
+
+    createAudioDecoder() {
+        return new AudioDecoder({
+                output: (frame) => this.processAudioFrame(frame),
+                error: (e) => console.log(e.message),
+        });
+    }
+
+    async onAudioFrame(metadata, data) {
+        if (this.decoder.state !== "configured") {
+            const codec = metadata.codec;
+            const sampleRate = 48000;
+            const numberOfChannels = 2;
+            const config = { codec, sampleRate, numberOfChannels };
+            const support = await AudioDecoder.isConfigSupported(config);
+            if (support.supported) {
+                console.log(`decoder supported with codec ${codec}`);
+                await this.decoder.configure(config);
+            } else {
+                return Promise.reject(`${codec} is not supported`);
+            }
+        }
+        return this.decodeAudioFrame(metadata, data);
+    }
+
+    async decodeAudioFrame(metadata, data) {
+        if (this.decoder.state === "configured") {
+            const chunk = new EncodedAudioChunk({
+                timestamp: metadata.ts,
+                type: "key",
+                data,
+            });
+            await this.decoder.decode(chunk);
+            return Promise.resolve();
+        } else {
+            return Promise.reject(`${metadata.codec} decoder not configured`);
+        }
+    }
+}

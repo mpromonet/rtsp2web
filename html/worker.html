@@ -22,7 +22,7 @@
         video.play();
         const offscreenCanvas = canvas.transferControlToOffscreen();
         
-        const worker = new Worker('worker.js');        
+        const worker = new Worker('worker.js',  { type: "module" });        
         worker.postMessage({ canvas: offscreenCanvas, url: location.search.slice(1) || "/ws0" }, [offscreenCanvas]);
 
         window.onbeforeunload = () => worker.terminate();
