@@ -40,7 +40,7 @@ class VideoStream {
     async playAudioFrame(frame) {
         const { numberOfChannels, numberOfFrames, sampleRate, format } = frame;
 
-        const audioBuffer = audioContext.createBuffer(numberOfChannels, numberOfFrames, sampleRate);
+        const audioBuffer = this.audioTrack.context.createBuffer(numberOfChannels, numberOfFrames, sampleRate);
         if (format.startsWith('planar')) {
             for (let channel = 0; channel < numberOfChannels; channel++) {
                 const channelData = new Float32Array(numberOfFrames);
