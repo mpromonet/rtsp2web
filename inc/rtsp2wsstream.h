@@ -22,13 +22,17 @@ class Rtsp2WsStream
     public:
         Rtsp2WsStream(HttpServerRequestHandler &httpServer, const std::string & wsurl, const std::string & rtspurl, int rtptransport, int verbose) :
             m_stop(0),
-            m_thread(std::thread([this, &httpServer, wsurl, rtspurl, rtptransport, verbose]() {
+            m_cb(httpServer, wsurl),
+            m_thread(std::thread([this, rtspurl, rtptransport, verbose]() {
                 Environment env(m_stop);
-                RTSPCallback cb(httpServer, wsurl);
-                RTSPConnection rtspClient(env, &cb, rtspurl.c_str(), 10, rtptransport, verbose);
+                RTSPConnection rtspClient(env, &m_cb, rtspurl.c_str(), 10, rtptransport, verbose);
                 
                 env.mainloop();	
             })) {
+        }
+
+        Json::Value toJSON() {
+            return m_cb.toJSON();
         }
 
         virtual ~Rtsp2WsStream() {
@@ -38,5 +42,6 @@ class Rtsp2WsStream
 
     private:
         char                                                          m_stop;    
+        RTSPCallback                                                  m_cb;
         std::thread                                                   m_thread;
 };

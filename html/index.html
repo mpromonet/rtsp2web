@@ -21,9 +21,14 @@
     import { VideoStream } from './videostream.js';
     const audioContext = new AudioContext();
     const canvas = document.createElement("canvas");
-    video.srcObject = canvas.captureStream();
+    const stream = canvas.captureStream();
+    const audioTrack = audioContext.createMediaStreamDestination().stream.getAudioTracks()[0];
+    stream.addTrack(audioTrack);
+
+    video.srcObject = stream;
     video.addEventListener('play', () => audioContext.resume());
     video.addEventListener('pause', () => audioContext.suspend());
+    video.addEventListener('volumechange', () => videoStream.setVolume(video.muted ? 0 : video.volume));
     video.play();
 
     const videoStream = new VideoStream(canvas, audioContext);
@@ -43,7 +48,8 @@
     fetch("/api/streams")
         .then(r => r.json())
         .then(r => {
-            r.forEach(stream => {
+            const streamList = Object.keys(r);
+            streamList.forEach(stream => {
                 const option = document.createElement("a");
                 option.url = stream;
                 option.text = stream;
@@ -55,9 +61,8 @@
                 menu.appendChild(option);
             });
 
-            if (r.length > 0) {
-                const stream = r[0];
-                selectStream(stream);
+            if (streamList.length > 0) {
+                selectStream(streamList[0]);
             }
         });
 </script>

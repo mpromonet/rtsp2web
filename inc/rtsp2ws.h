@@ -47,9 +47,9 @@ class Rtsp2Ws
                         return Json::Value(VERSION);
                 };
                 m_httpfunc["/api/streams"] = [this](const struct mg_request_info *, const Json::Value &) -> Json::Value {
-                        Json::Value answer(Json::arrayValue);
+                        Json::Value answer(Json::objectValue);
                         for (auto & it : this->m_streams) {
-                                answer.append(it.first);
+                                answer[it.first] = it.second->toJSON();
                         }
                         return answer;
                 };                

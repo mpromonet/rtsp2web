@@ -28,7 +28,7 @@ class RTSPCallback : public RTSPConnection::Callback
         RTSPCallback(HttpServerRequestHandler& httpServer, const std::string& uri): m_httpServer(httpServer), m_uri(uri)   {}
 
         virtual bool    onNewSession(const char* id, const char* media, const char* codec, const char* sdp) {
-            std::cout << id << " " << media << "/" <<  codec << std::endl;
+            std::cout << id << " " << media << "/" <<  codec << " " << sdp << std::endl;
 
             bool ret = false;
             if (strcmp(media, "video") == 0) {
@@ -98,6 +98,14 @@ class RTSPCallback : public RTSPConnection::Callback
         virtual void    onDataTimeout(RTSPConnection& connection)       {
             connection.start();
         }	
+
+        Json::Value toJSON() {
+            Json::Value data;
+            for (auto const& x : m_medias) {
+                data[x.first] = x.second + "/" + m_codecs[x.first];
+            }
+            return data;
+        }
 
     private:
         void onDefaultData(const char* id, const std::string& codec, unsigned char* buffer, ssize_t size, struct timeval presentationTime) {
