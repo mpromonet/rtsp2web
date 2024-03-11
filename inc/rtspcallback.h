@@ -27,8 +27,8 @@ class RTSPCallback : public RTSPConnection::Callback
     public:
         RTSPCallback(HttpServerRequestHandler& httpServer, const std::string& uri): m_httpServer(httpServer), m_uri(uri)   {}
 
-        virtual bool    onNewSession(const char* id, const char* media, const char* codec, const char* sdp) {
-            std::cout << id << " " << media << "/" <<  codec << " " << sdp << std::endl;
+        virtual bool    onNewSession(const char* id, const char* media, const char* codec, const char* sdp, unsigned int rtpfrequency, unsigned int channels) {
+            std::cout << id << " " << media << "/" <<  codec << " " << rtpfrequency << "/" << channels << std::endl;
 
             bool ret = false;
             if (strcmp(media, "video") == 0) {
@@ -48,7 +48,7 @@ class RTSPCallback : public RTSPConnection::Callback
                     std::cout << codec << " not supported" << std::endl;
                 }
             } else if (strcmp(media, "audio") == 0) {
-                if (strcmp(codec, "L16") == 0) {
+                if (strcmp(codec, "MPEG4-GENERIC") == 0) {
                     m_medias[id] = media;
                     m_codecs[id] = codec;
                     ret = true;
@@ -77,8 +77,8 @@ class RTSPCallback : public RTSPConnection::Callback
                 this->onH265Data(id, buffer, size, presentationTime);
             } else if (codec == "JPEG") {
                 this->onDefaultData(id, "jpeg", buffer, size, presentationTime);
-            } else if (codec == "L16") {
-                this->onDefaultData(id, "pcm-s16", buffer, size, presentationTime);
+            } else if (codec == "MPEG4-GENERIC") {
+                this->onDefaultData(id, "aac", buffer, size, presentationTime);
             } else if (codec == "MPA") {
                 this->onDefaultData(id, "mp3", buffer, size, presentationTime);
             } else if (codec == "OPUS") {
@@ -108,13 +108,18 @@ class RTSPCallback : public RTSPConnection::Callback
         }
 
     private:
+        void publish(const Json::Value & data, const std::string & buf) {
+            m_httpServer.publishJSON(m_uri, data);
+            m_httpServer.publishBin(m_uri, buf.c_str(), buf.size());
+        }
+
         void onDefaultData(const char* id, const std::string& codec, unsigned char* buffer, ssize_t size, struct timeval presentationTime) {
             Json::Value data;
             data["media"] = m_medias[id];
             data["codec"] = codec;
             data["ts"] = Json::Value::UInt64(1000ULL*1000*presentationTime.tv_sec+presentationTime.tv_usec);
-            m_httpServer.publishJSON(m_uri, data);                    
-            m_httpServer.publishBin(m_uri, (const char*)buffer, size);
+            std::string buf(buffer, buffer+size);
+            publish(data, buf);                    
         }
 
         void onH264Data(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) {
@@ -140,8 +145,7 @@ class RTSPCallback : public RTSPConnection::Callback
                 if (nalu == 5) {
                     data["type"] = "keyframe";
                 }             
-                m_httpServer.publishJSON(m_uri, data);                    
-                m_httpServer.publishBin(m_uri, buf.c_str(), buf.size());
+                publish(data, buf);                    
             }
         }
 
@@ -167,8 +171,7 @@ class RTSPCallback : public RTSPConnection::Callback
                 if (nalu == 19 || nalu == 20) {
                     data["type"] = "keyframe";
                 }
-                m_httpServer.publishJSON(m_uri, data);
-                m_httpServer.publishBin(m_uri, buf.c_str(), buf.size());
+                publish(data, buf);                    
             }
         }
 
@@ -188,25 +191,19 @@ class RTSPCallback : public RTSPConnection::Callback
             return true;                       
         }
 
-        bool onH265Config(const char* id, const char* sdp) {
-            const char* pattern="sprop-vps=";
+        bool onH265SPropConfig(const char* pattern, const char* id, const char* sdp) {
             const char* sprop=strstr(sdp, pattern);
             if (sprop) {
                 std::string vps(extractProp(sprop+strlen(pattern)));
                 onCfg(id, vps);
             }
-            pattern="sprop-sps=";
-            sprop=strstr(sdp, pattern);
-            if (sprop) {
-                std::string sps(extractProp(sprop+strlen(pattern)));
-                onCfg(id, sps);
-            }
-            pattern="sprop-pps=";
-            sprop=strstr(sdp, pattern);
-            if (sprop) {
-                std::string pps(extractProp(sprop+strlen(pattern)));
-                onCfg(id, pps);
-            }
+            return true;
+        }
+
+        bool onH265Config(const char* id, const char* sdp) {
+            onH265SPropConfig("sprop-vps=", id, sdp);
+            onH265SPropConfig("sprop-sps=", id, sdp);
+            onH265SPropConfig("sprop-pps=", id, sdp);
             return true;
         }
 
