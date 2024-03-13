@@ -2,10 +2,11 @@
 <head>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" type="text/css" href="style.css">
+    <script type="module" src="./wc-video-ws.js"></script>
 </head>
 <body>
     <div id="content">
-        <video id="video" muted playsinline controls preload="none"></video>
+        <wc-video-ws id="videows"></wc-video-ws>
     </div>
     <footer>
             <a href="https://github.com/mpromonet/rtsp2ws">rtsp2ws</a>
@@ -15,16 +16,6 @@
 <script type="module">
     fetch("/api/version").then(r => r.json()).then(r => version.innerText = r);
 
-    import { VideoStream } from './videostream.js';
-    
-    const audioContext = new AudioContext();
-    const canvas = document.createElement("canvas");
-    video.srcObject = canvas.captureStream();
-    video.addEventListener('play', () => audioContext.resume());
-    video.addEventListener('pause', () => audioContext.suspend());
-    video.play();
-    const videoStream = new VideoStream(canvas, audioContext);    
-    videoStream.connect(location.search.slice(1) || "/ws0");
+    videows.setAttribute("url", location.search.slice(1) || "/ws0");
 </script>
-
 </html>
