@@ -9,7 +9,7 @@
 export class AudioProcessor {
     constructor(audioContext) {
         this.audioContext = audioContext;
-        this.audioBufferQueue = { bufferQueue: [], nextBufferTime: 0 };
+        this.audioBufferQueue = { bufferQueue: new Set(), nextBufferTime: 0 };
         this.gain = this.audioContext.createGain();
         this.gain.connect(this.audioContext.destination);
         this.decoder = this.createAudioDecoder();
@@ -46,6 +46,7 @@ export class AudioProcessor {
         const source = this.audioContext.createBufferSource();
         source.buffer = audioBuffer;
         source.connect(this.gain);
+        this.audioBufferQueue.bufferQueue.add(source);
 
         if (this.audioContext.currentTime > this.audioBufferQueue.nextBufferTime) {
             source.start();
@@ -55,14 +56,7 @@ export class AudioProcessor {
             this.audioBufferQueue.nextBufferTime += audioBuffer.duration;
         }
 
-        this.audioBufferQueue.bufferQueue.push(source);
-
-        source.onended = () => {
-            const index = this.audioBufferQueue.bufferQueue.indexOf(source);
-            if (index !== -1) {
-                this.audioBufferQueue.bufferQueue.splice(index, 1);
-            }
-        };
+        source.onended = () => this.audioBufferQueue.bufferQueue.delete(source);
     }
 
     setVolume(volume) {
@@ -79,8 +73,8 @@ export class AudioProcessor {
     async onAudioFrame(metadata, data) {
         if (this.decoder.state !== "configured") {
             const codec = metadata.codec;
-            const sampleRate = 48000;
-            const numberOfChannels = 2;
+            const sampleRate = metadata.freq;
+            const numberOfChannels = metadata.channels;
             const config = { codec, sampleRate, numberOfChannels };
             const support = await AudioDecoder.isConfigSupported(config);
             if (support.supported) {

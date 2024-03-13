@@ -23,7 +23,19 @@
 
 class RTSPCallback : public RTSPConnection::Callback
 {
-        
+    class SessionParams
+    {
+        public:
+            SessionParams(const std::string& media="", const std::string& codec="", unsigned int rtpfrequency=0, unsigned int channels=0)
+                : m_media(media), m_codec(codec), m_rtpfrequency(rtpfrequency), m_channels(channels) {
+            }
+
+            std::string m_media;
+            std::string m_codec;
+            unsigned int m_rtpfrequency;
+            unsigned int m_channels;
+    };
+
     public:
         RTSPCallback(HttpServerRequestHandler& httpServer, const std::string& uri): m_httpServer(httpServer), m_uri(uri)   {}
 
@@ -33,32 +45,26 @@ class RTSPCallback : public RTSPConnection::Callback
             bool ret = false;
             if (strcmp(media, "video") == 0) {
                 if (strcmp(codec, "H264") == 0) {
-                    m_medias[id] = media;
-                    m_codecs[id] = codec;
+                    m_sessions[id] = SessionParams(media, codec, rtpfrequency, channels);
                     ret = this->onH264Config(id, sdp);
                 } else if (strcmp(codec, "H265") == 0) {
-                    m_medias[id] = media;
-                    m_codecs[id] = codec;
+                    m_sessions[id] = SessionParams(media, codec, rtpfrequency, channels);
                     ret =  this->onH265Config(id, sdp);
                 } else if (strcmp(codec, "JPEG") == 0) {
-                    m_medias[id] = media;
-                    m_codecs[id] = codec;
+                    m_sessions[id] = SessionParams(media, codec, rtpfrequency, channels);
                     ret = true;
                 } else {
                     std::cout << codec << " not supported" << std::endl;
                 }
             } else if (strcmp(media, "audio") == 0) {
                 if (strcmp(codec, "MPEG4-GENERIC") == 0) {
-                    m_medias[id] = media;
-                    m_codecs[id] = codec;
+                    m_sessions[id] = SessionParams(media, codec, rtpfrequency, channels);
                     ret = true;
                 } else if (strcmp(codec, "MPA") == 0) {
-                    m_medias[id] = media;
-                    m_codecs[id] = codec;
+                    m_sessions[id] = SessionParams(media, codec, rtpfrequency, channels);
                     ret = true;
                 } else if (strcmp(codec, "OPUS") == 0) {
-                    m_medias[id] = media;
-                    m_codecs[id] = codec;
+                    m_sessions[id] = SessionParams(media, codec, rtpfrequency, channels);
                     ret = true;
                 } else {
                     std::cout << codec << " not supported" << std::endl;
@@ -70,7 +76,7 @@ class RTSPCallback : public RTSPConnection::Callback
         }
         
         virtual bool    onData(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) {
-            std::string codec = m_codecs[id];
+            std::string codec = m_sessions[id].m_codec;
             if (codec == "H264") {
                 this->onH264Data(id, buffer, size, presentationTime);
             } else if (codec == "H265") {
@@ -101,8 +107,8 @@ class RTSPCallback : public RTSPConnection::Callback
 
         Json::Value toJSON() {
             Json::Value data;
-            for (auto const& x : m_medias) {
-                data[x.first] = x.second + "/" + m_codecs[x.first];
+            for (auto const& x : m_sessions) {
+                data[x.first] = x.second.m_media + "/" + x.second.m_codec;
             }
             return data;
         }
@@ -115,8 +121,10 @@ class RTSPCallback : public RTSPConnection::Callback
 
         void onDefaultData(const char* id, const std::string& codec, unsigned char* buffer, ssize_t size, struct timeval presentationTime) {
             Json::Value data;
-            data["media"] = m_medias[id];
+            data["media"] = m_sessions[id].m_media;
             data["codec"] = codec;
+            data["freq"] = m_sessions[id].m_rtpfrequency;
+            data["channels"] = m_sessions[id].m_channels;
             data["ts"] = Json::Value::UInt64(1000ULL*1000*presentationTime.tv_sec+presentationTime.tv_usec);
             std::string buf(buffer, buffer+size);
             publish(data, buf);                    
@@ -140,7 +148,7 @@ class RTSPCallback : public RTSPConnection::Callback
                 for (int i = 5; (i < 8) && (i < m_sps.size()); i++) {
                     ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(m_sps[i]);
                 }
-                data["media"] = m_medias[id];
+                data["media"] = m_sessions[id].m_media;
                 data["codec"] = "avc1." + ss.str();   
                 if (nalu == 5) {
                     data["type"] = "keyframe";
@@ -165,7 +173,7 @@ class RTSPCallback : public RTSPConnection::Callback
             }
             if (nalu == 19 || nalu ==20 || nalu == 1) {
                 Json::Value data;
-                data["media"] = m_medias[id];
+                data["media"] = m_sessions[id].m_media;
                 data["codec"] = "hev1.1.6.L93.B0";
                 data["ts"] = Json::Value::UInt64(1000ULL*1000*presentationTime.tv_sec+presentationTime.tv_usec);
                 if (nalu == 19 || nalu == 20) {
@@ -231,8 +239,7 @@ class RTSPCallback : public RTSPConnection::Callback
     private:
         HttpServerRequestHandler&               m_httpServer;
         std::string                             m_uri;
-        std::map<std::string,std::string>       m_medias;
-        std::map<std::string,std::string>       m_codecs;
+        std::map<std::string,SessionParams>     m_sessions;
         std::string                             m_vps;
         std::string                             m_sps;
         std::string                             m_pps;

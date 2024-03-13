@@ -22,7 +22,7 @@
       - libssl3      
 
   apps:
-    v4l2rtspserver:
+    rtsp2ws:
       command: usr/local/bin/rtsp2ws -p $SNAP/usr/local/share/rtsp2ws/
       daemon: simple   
       plugs: [network-bind]
