@@ -21,15 +21,17 @@
 #include "HttpServerRequestHandler.h"
 #include "rtsp2wsstream.h"
 
-int NullLogger(const struct mg_connection *, const char *) {
-    return 1;
+int logger(const struct mg_connection *conn, const char *message) 
+{
+	fprintf(stderr, "%s\n", message);
+	return 0;
 }
 
 class Rtsp2Ws
 {
     public:
         Rtsp2Ws(const std::vector<std::string> & urls, const std::vector<std::string>& options, int rtptransport, int verbose)
-            : m_httpServer(this->getHttpFunc(), m_wsfunc, options, verbose ? NULL : NullLogger) {
+            : m_httpServer(this->getHttpFunc(), m_wsfunc, options, verbose ? logger : NULL) {
                 int idx = 0;
                 for (auto & url : urls) {
                     this->addStream("/ws" + std::to_string(idx++), url, rtptransport, verbose);
