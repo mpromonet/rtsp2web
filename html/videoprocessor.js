@@ -8,7 +8,7 @@
 export class VideoProcessor {
     constructor(videoCanvas) {
         this.videoContext = videoCanvas.getContext("2d");
-        this.decoder = this.createVideoDecoder();
+        this.decoder = null;
     }
 
     async decodeFrame(metadata, data) {
@@ -26,6 +26,9 @@ export class VideoProcessor {
     }
 
     async onH26xFrame(metadata, data) {
+        if (!this.decoder || this.decoder.state === "closed") {
+            this.decoder = this.createVideoDecoder();
+        }
         if (this.decoder.state !== "configured" && metadata.type === "keyframe" ) {
             const codec = metadata.codec;
             const config = { codec };
@@ -41,14 +44,11 @@ export class VideoProcessor {
     }
 
     async onJPEGFrame(metadata, data) {
-        let binaryStr = "";
-        for (let i = 0; i < data.length; i++) {
-          binaryStr += String.fromCharCode(data[i]);
-        }
-        const img = new Image();
-        img.src = "data:image/jpeg;base64," + btoa(binaryStr);
-        await new Promise(r => img.onload=r);
-        return new VideoFrame(img, {timestamp: metadata.ts});
+        const decoder = new ImageDecoder({data, type: 'image/jpeg'});
+        const image = await decoder.decode();
+        const frame = new VideoFrame(image.image, {timestamp: metadata.ts});
+        this.displayFrame(frame);
+        return Promise.resolve();
     }
 
     onVideoFrame(metadata, data) {
@@ -73,14 +73,16 @@ export class VideoProcessor {
     }
 
     createVideoDecoder() {
-        this.clearFrame();
         return new VideoDecoder({
                 output: (frame) => this.displayFrame(frame),
                 error: (e) => console.log(e.message),
         });
     }    
 
-    reset() {
-        this.decoder = this.createVideoDecoder();
+    close() {
+        this.clearFrame();
+        if (this.decoder && this.decoder.state !== "closed") {
+            this.decoder.close();
+        }
     }
 }

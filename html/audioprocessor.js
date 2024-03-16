@@ -12,7 +12,7 @@ export class AudioProcessor {
         this.audioBufferQueue = { bufferQueue: new Set(), nextBufferTime: 0 };
         this.gain = this.audioContext.createGain();
         this.gain.connect(this.audioContext.destination);
-        this.decoder = this.createAudioDecoder();
+        this.decoder = null;
     }
 
     async processAudioFrame(frame) {
@@ -71,6 +71,9 @@ export class AudioProcessor {
     }
 
     async onAudioFrame(metadata, data) {
+        if (!this.decoder || this.decoder.state === "closed") {
+            this.decoder = this.createAudioDecoder();
+        }
         if (this.decoder.state !== "configured") {
             const codec = metadata.codec;
             const sampleRate = metadata.freq;
@@ -100,4 +103,10 @@ export class AudioProcessor {
             return Promise.reject(`${metadata.codec} decoder not configured`);
         }
     }
+
+    close() {
+        if (this.decoder && this.decoder.state !== "closed") {
+            this.decoder.close();
+        }
+    }    
 }

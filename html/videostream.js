@@ -15,7 +15,6 @@ export class VideoStream {
         this.ws = null;
 
         this.videoProcessor = new VideoProcessor(videoCanvas);
-
         this.audioProcessor = new AudioProcessor(audioContext);
     }
 
@@ -62,6 +61,7 @@ export class VideoStream {
             this.ws.close();
         }
         this.ws = null;
-        this.videoProcessor.reset();
+        this.videoProcessor.close();
+        this.audioProcessor.close();
     }
 }
