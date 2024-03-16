@@ -3,10 +3,22 @@
     <head>
         <link rel="icon" type="image/png" href="favicon.png">
         <link rel="stylesheet" type="text/css" href="style.css">
+        <style>
+            #content {
+                display: flex;
+                flex-flow: row wrap;
+                justify-content: space-between;
+                align-items: center;
+            }
+            video {
+                height: 25rem;
+                width: auto;
+                margin: 1rem;
+            }
+        </style>        
     </head>    
     <body>
         <div id="content">
-            <video id="video" muted playsinline controls preload="none"></video>
         </div>
         <footer>
                 <a href="https://github.com/mpromonet/rtsp2ws">rtsp2ws</a>
@@ -17,14 +29,27 @@
     <script>    
         fetch("/api/version").then(r => r.json()).then(r => version.innerText = r);
 
-        const canvas = document.createElement("canvas");
-        video.srcObject = canvas.captureStream();
-        video.play();
-        const offscreenCanvas = canvas.transferControlToOffscreen();
-        
-        const worker = new Worker('worker.js',  { type: "module" });        
-        worker.postMessage({ canvas: offscreenCanvas, url: location.search.slice(1) || "/ws0" }, [offscreenCanvas]);
 
-        window.onbeforeunload = () => worker.terminate();
+        fetch("/api/streams")
+        .then(r => r.json())
+        .then(r => {
+            const streamList = Object.keys(r);
+            streamList.forEach(stream => {
+                const video = document.createElement("video");
+                video.muted = true;
+                video.playsinline = true;
+                video.controls = true;
+                video.preload = "none";
+                content.appendChild(video);
+
+                const canvas = document.createElement("canvas");
+                video.srcObject = canvas.captureStream();
+                video.play();
+                const offscreenCanvas = canvas.transferControlToOffscreen();
+                
+                const worker = new Worker('worker.js',  { type: "module" });        
+                worker.postMessage({ canvas: offscreenCanvas, url: stream }, [offscreenCanvas]);                
+            });
+        });
     </script>        
 </html>

@@ -15,7 +15,9 @@ export class VideoStream {
         this.ws = null;
 
         this.videoProcessor = new VideoProcessor(videoCanvas);
-        this.audioProcessor = new AudioProcessor(audioContext);
+        if (audioContext) {
+            this.audioProcessor = new AudioProcessor(audioContext);
+        }
     }
 
     async onMessage(message) {
@@ -26,7 +28,7 @@ export class VideoStream {
                 if (this.metadata.media === 'video') {
                     await this.videoProcessor.onVideoFrame(this.metadata, bytes);
                 } else if (this.metadata.media === 'audio') {
-                    await this.audioProcessor.onAudioFrame(this.metadata, bytes);
+                    await this.audioProcessor?.onAudioFrame(this.metadata, bytes);
                 }
             } else if (typeof data === 'string') {
                 this.metadata = JSON.parse(data);
@@ -37,7 +39,7 @@ export class VideoStream {
     }
 
     setVolume(volume) {
-        this.audioProcessor.setVolume(volume);
+        this.audioProcessor?.setVolume(volume);
     }
     
     connect(stream) {
@@ -62,6 +64,6 @@ export class VideoStream {
         }
         this.ws = null;
         this.videoProcessor.close();
-        this.audioProcessor.close();
+        this.audioProcessor?.close();
     }
 }
