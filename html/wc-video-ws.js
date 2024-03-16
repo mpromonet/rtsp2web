@@ -23,25 +23,25 @@ class VideoWsElement extends HTMLElement {
                   }
                   </style>
                   <video id="video" muted playsinline controls preload="none"></video>`;      
+
+        this.audioContext = new AudioContext();
+        const canvas = document.createElement("canvas");
+        this.videoStream = new VideoStream(canvas, this.audioContext);
+
+        this.stream = canvas.captureStream();
+        this.stream.addTrack(this.audioContext.createMediaStreamDestination().stream.getAudioTracks()[0]);          
     }
   
     connectedCallback() {
         console.log("connectedCallback");
-        const audioContext = new AudioContext();
-        const canvas = document.createElement("canvas");
-        this.videoStream = new VideoStream(canvas, audioContext);
-
-        const stream = canvas.captureStream();
-        const audioTrack = audioContext.createMediaStreamDestination().stream.getAudioTracks()[0];
-        stream.addTrack(audioTrack);
 
         const video = this.shadowDOM.getElementById("video");
-        video.srcObject = stream;
-        video.addEventListener('play', () => audioContext.resume());
-        video.addEventListener('pause', () => audioContext.suspend());
+        video.srcObject = this.stream;
+        video.addEventListener('play', () => this.audioContext.resume());
+        video.addEventListener('pause', () => this.audioContext.suspend());
         video.addEventListener('volumechange', () => this.videoStream.setVolume(video.muted ? 0 : video.volume));
-        audioContext.onstatechange = function() {
-            switch(audioContext.state) {
+        this.audioContext.onstatechange = function() {
+            switch(this.audioContext.state) {
                 case 'suspended':
                     video.muted = true;
                     break;
@@ -51,6 +51,10 @@ class VideoWsElement extends HTMLElement {
             }
         };        
         video.play();
+
+        if (this.hasAttribute("url")) {
+            this.videoStream.connect(this.getAttribute("url"));
+        }
     }
   
     disconnectedCallback() {

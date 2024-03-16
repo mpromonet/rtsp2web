@@ -1,0 +1,42 @@
+<html>
+<head>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script type="module" src="./wc-video-ws.js"></script>
+    <style>
+    #content {
+        display: flex;
+        flex-flow: row wrap;
+        justify-content: space-between;
+        align-items: center;
+    }
+    wc-video-ws {
+        height: 25rem;
+        width: auto;
+        margin: 1rem;
+    }
+    </style>
+</head>
+<body>
+   <div id="content">
+   </div>   
+   <footer>
+        <a href="https://github.com/mpromonet/rtsp2ws">rtsp2ws</a>
+        <div id="version"></div>
+    </footer>   
+</body>
+<script type="module">
+    fetch("/api/version").then(r => r.json()).then(r => version.innerText = r);
+
+    fetch("/api/streams")
+        .then(r => r.json())
+        .then(r => {
+            const streamList = Object.keys(r);
+            streamList.forEach(stream => {
+                const streamElt = document.createElement("wc-video-ws");
+                streamElt.setAttribute("url", stream);
+                content.appendChild(streamElt);
+            });
+        });
+</script>
+</html>
