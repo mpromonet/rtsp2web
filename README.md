@@ -6,6 +6,8 @@
 
 This is a simple application that connect to RTSP streams, send compressed data over websocket and then decode on browser side using [webcodec](https://github.com/w3c/webcodecs)
 
+[![Screenshot](images/screenshot.jpg)](https://github.com/mpromonet/rtsp2ws)
+
 Build
 ------- 
 	cmake . && make
