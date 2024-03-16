@@ -84,7 +84,7 @@ class RTSPCallback : public RTSPConnection::Callback
             } else if (codec == "JPEG") {
                 this->onDefaultData(id, "jpeg", buffer, size, presentationTime);
             } else if (codec == "MPEG4-GENERIC") {
-                this->onDefaultData(id, "aac", buffer, size, presentationTime);
+                this->onDefaultData(id, "mp4a.40.2", buffer, size, presentationTime);
             } else if (codec == "MPA") {
                 this->onDefaultData(id, "mp3", buffer, size, presentationTime);
             } else if (codec == "OPUS") {

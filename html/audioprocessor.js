@@ -108,5 +108,7 @@ export class AudioProcessor {
         if (this.decoder && this.decoder.state !== "closed") {
             this.decoder.close();
         }
+        this.audioBufferQueue.bufferQueue.forEach(source => source.stop());
+        this.audioBufferQueue.bufferQueue.clear();
     }    
 }
