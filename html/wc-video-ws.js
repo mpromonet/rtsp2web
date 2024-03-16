@@ -40,6 +40,16 @@ class VideoWsElement extends HTMLElement {
         video.addEventListener('play', () => audioContext.resume());
         video.addEventListener('pause', () => audioContext.suspend());
         video.addEventListener('volumechange', () => this.videoStream.setVolume(video.muted ? 0 : video.volume));
+        audioContext.onstatechange = function() {
+            switch(audioContext.state) {
+                case 'suspended':
+                    video.muted = true;
+                    break;
+                case 'running':
+                    video.muted = false;
+                    break;
+            }
+        };        
         video.play();
     }
   
