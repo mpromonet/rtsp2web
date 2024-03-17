@@ -23,6 +23,6 @@
 
   apps:
     rtsp2ws:
-      command: usr/local/bin/rtsp2ws -p $SNAP/usr/local/share/rtsp2ws/
+      command: usr/local/bin/rtsp2ws -p $SNAP/usr/local/share/rtsp2ws/www -C $SNAP/usr/local/share/rtsp2ws/config.json
       daemon: simple   
       plugs: [network-bind]

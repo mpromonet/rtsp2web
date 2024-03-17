@@ -5,7 +5,7 @@
 **
 ** -------------------------------------------------------------------------*/
 
-import { VideoStream } from './videostream.js';
+import { MediaStream } from './mediastream.js';
 
 class VideoWsElement extends HTMLElement {
     static observedAttributes = ["url"];

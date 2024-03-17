@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <string>
 #include <iostream>
+#include <fstream>
 
 #include "cxxopts.hpp"
 
@@ -39,17 +40,20 @@ void sighandler(int)
 int main(int argc, char* argv[]) 
 {	
 	int rtptransport = RTSPConnection::RTPOVERTCP;
+	Json::Value config;
 
 	cxxopts::Options options(argv[0]);
 	options.allow_unrecognised_options();
 	options.add_options()
 		("h,help"      , "Print usage")
-		("v,verbose"   , "Verbose"              , cxxopts::value<int>()->default_value("0"))
+		("v,verbose"   , "Verbose"                                      , cxxopts::value<int>()->default_value("0"))
 
-		("P,port"      , "Listening port"       , cxxopts::value<std::string>()->default_value("8080")) 
-		("N,thread"    , "Server number threads", cxxopts::value<std::string>()->default_value(""))
-		("p,path"      , "Server root path"     , cxxopts::value<std::string>()->default_value("html"))
+		("P,port"      , "Listening port"                               , cxxopts::value<std::string>()->default_value("8080")) 
+		("N,thread"    , "Server number threads"                        , cxxopts::value<std::string>()->default_value(""))
+		("p,path"      , "Server root path"                             , cxxopts::value<std::string>()->default_value("www"))
 		("c,sslkeycert", "Path to private key and certificate for HTTPS", cxxopts::value<std::string>()->default_value(""))
+
+		("C,config"    , "Config"                                       , cxxopts::value<std::string>() ) 
 
 		("M"           , "RTP over Multicast")
 		("U"           , "RTP over Unicast")
@@ -72,10 +76,17 @@ int main(int argc, char* argv[])
 	if (result.count("M")) rtptransport = RTSPConnection::RTPUDPMULTICAST;
 	if (result.count("U")) rtptransport = RTSPConnection::RTPUDPUNICAST;
 	if (result.count("H")) rtptransport = RTSPConnection::RTPOVERHTTP;
+	if (result.count("config")) {
+		std::string configFile = result["config"].as<std::string>();
+		std::ifstream ifs(configFile.c_str());
+		if (ifs.good()) {
+			ifs >> config;
+		}
+	}
 
-	std::vector<std::string> urls;
+	int idx = 0;
 	for (auto arg : result.unmatched()) {
-		urls.push_back(arg);
+		config["urls"]["stream" + std::to_string(idx++)]["video"]=arg;
 	}
 
 	// http options
@@ -100,7 +111,7 @@ int main(int argc, char* argv[])
 	}		
 
 	// api server
-	Rtsp2Ws server(urls, opts, rtptransport, verbose);
+	Rtsp2Ws server(config, opts, rtptransport, verbose);
 	if (server.getContext() == NULL)
 	{
 		std::cout << "Cannot listen on port:" << port << std::endl; 

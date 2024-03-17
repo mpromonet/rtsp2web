@@ -30,11 +30,11 @@ int logger(const struct mg_connection *conn, const char *message)
 class Rtsp2Ws
 {
     public:
-        Rtsp2Ws(const std::vector<std::string> & urls, const std::vector<std::string>& options, int rtptransport, int verbose)
+        Rtsp2Ws(const Json::Value & config, const std::vector<std::string>& options, int rtptransport, int verbose)
             : m_httpServer(this->getHttpFunc(), m_wsfunc, options, verbose ? logger : NULL) {
-                int idx = 0;
-                for (auto & url : urls) {
-                    this->addStream("/ws" + std::to_string(idx++), url, rtptransport, verbose);
+                Json::Value urls(config["urls"]);
+                for (auto & url : urls.getMemberNames()) {
+                    this->addStream("/"+url, urls[url]["video"].asString(), rtptransport, verbose);
                 }
         }
 

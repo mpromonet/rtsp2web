@@ -8,7 +8,7 @@
 import { VideoProcessor } from './videoprocessor.js';
 import { AudioProcessor } from './audioprocessor.js';
 
-export class VideoStream {
+export class MediaStream {
     constructor(videoCanvas, audioContext) {
         this.metadata = {media:'', codec: '', freq: 0, channels: 0, ts: 0, type: ''};
         this.reconnectTimer = null;

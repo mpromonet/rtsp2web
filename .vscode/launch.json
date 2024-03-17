@@ -8,7 +8,7 @@
         "type": "cppdbg",
         "request": "launch",
         "program": "${workspaceFolder}/rtsp2ws",
-        "args": ["rtsp://pi2.local:8554/"],
+        "args": ["-C","config.json"],
         "stopAtEntry": false,
         "cwd": "${workspaceFolder}",
         "environment": [],

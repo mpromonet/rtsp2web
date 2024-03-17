@@ -5,7 +5,7 @@
 **
 ** -------------------------------------------------------------------------*/
 
-import { VideoStream } from './videostream.js';
+import { MediaStream } from './mediastream.js';
 
 self.onmessage = (event) => {
     const offscreenCanvas = event.data.canvas;
