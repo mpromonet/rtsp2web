@@ -26,7 +26,7 @@ class VideoWsElement extends HTMLElement {
 
         this.audioContext = new AudioContext();
         const canvas = document.createElement("canvas");
-        this.videoStream = new VideoStream(canvas, this.audioContext);
+        this.mediaStream = new MediaStream(canvas, this.audioContext);
 
         this.stream = canvas.captureStream();
         this.stream.addTrack(this.audioContext.createMediaStreamDestination().stream.getAudioTracks()[0]);          
@@ -39,7 +39,7 @@ class VideoWsElement extends HTMLElement {
         video.srcObject = this.stream;
         video.addEventListener('play', () => this.audioContext.resume());
         video.addEventListener('pause', () => this.audioContext.suspend());
-        video.addEventListener('volumechange', () => this.videoStream.setVolume(video.muted ? 0 : video.volume));
+        video.addEventListener('volumechange', () => this.mediaStream.setVolume(video.muted ? 0 : video.volume));
         this.audioContext.onstatechange = () => {
             switch(this.audioContext.state) {
                 case 'suspended':
@@ -53,19 +53,19 @@ class VideoWsElement extends HTMLElement {
         video.play();
 
         if (this.hasAttribute("url")) {
-            this.videoStream.connect(this.getAttribute("url"));
+            this.mediaStream.connect(this.getAttribute("url"));
         }
     }
   
     disconnectedCallback() {
         console.log("disconnectedCallback");
-        this.videoStream.close();
+        this.mediaStream.close();
     }
     
     attributeChangedCallback(name, oldValue, newValue) {
         console.log(`Attribute ${name} has changed.`);
         if (name === "url") {
-            this.videoStream.connect(newValue);
+            this.mediaStream.connect(newValue);
         }
     }
   }

@@ -11,6 +11,6 @@ self.onmessage = (event) => {
     const offscreenCanvas = event.data.canvas;
     console.log('worker received canvas', offscreenCanvas);
 
-    const videoStream = new VideoStream(offscreenCanvas);
-    videoStream.connect(event.data.url);
+    const mediaStream = new MediaStream(offscreenCanvas);
+    mediaStream.connect(event.data.url);
 };
