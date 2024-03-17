@@ -40,4 +40,4 @@ jobs:
         imageToDeploy: ghcr.io/${{ github.repository }}:latest
         containerAppName: rtsp2ws
         resourceGroup: deploy
-        targetPort: 8000
+        targetPort: 8080
