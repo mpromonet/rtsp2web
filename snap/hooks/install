@@ -1,0 +1,3 @@
+#!/bin/sh -e
+
+cp $SNAP/usr/local/share/rtsp2ws/config.json $SNAP_USER_DATA/
