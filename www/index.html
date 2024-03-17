@@ -37,7 +37,7 @@
             streamList.forEach(stream => {
                 const option = document.createElement("a");
                 option.url = stream;
-                option.text = stream;
+                option.text = stream.substring(1);
                 option.onclick = function () { 
                     if (this.className !== "active") {
                         selectStream(stream);
@@ -47,7 +47,8 @@
             });
 
             if (streamList.length > 0) {
-                selectStream(streamList[0]);
+                const random = streamList.sort(() => .5 - Math.random());
+                selectStream(random[0]);
             }
         });
 </script>
