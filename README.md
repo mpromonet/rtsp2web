@@ -6,7 +6,8 @@
 
 This is a simple application that connect to RTSP streams, send compressed data over websocket and then decode on browser side using [webcodec](https://github.com/w3c/webcodecs)
 
-[![Screenshot](images/screenshot.jpg)](https://github.com/mpromonet/rtsp2ws)
+[![Screenshot](images/screenshot.jpg)](https://rtsp2ws.agreeabletree-365b9a90.canadacentral.azurecontainerapps.io)
+[Live Demo](https://rtsp2ws.agreeabletree-365b9a90.canadacentral.azurecontainerapps.io)
 
 Build
 ------- 
@@ -22,6 +23,7 @@ Usage
     -N, --thread arg      Server number threads (default: "")
     -p, --path arg        Server root path (default: html)
     -c, --sslkeycert arg  Path to private key and certificate for HTTPS (default: "")
+    -C, --config arg      Config
     -M                    RTP over Multicast
     -U                    RTP over Unicast
     -H                    RTP over HTTP
@@ -38,7 +40,7 @@ The container entry point is the application, then you can :
 
         docker run ghcr.io/mpromonet/rtsp2ws -h
 
-* run the container specifying some paramaters :
+* run the container specifying parameters :
 
         docker run -p 8080:8080 ghcr.io/mpromonet/rtsp2ws rtsp://37.157.51.30/axis-media/media.amp rtsp://71.83.5.156/axis-media/media.amp rtsp://86.44.41.160/axis-media/media.amp 
         docker run -p 8080:8080 -v $PWD/keycert.pem:/tmp/keycert.pem ghcr.io/mpromonet/rtsp2ws -P 8080s -c /tmp/keycert.pem rtsp://37.157.51.30/axis-media/media.amp rtsp://71.83.5.156/axis-media/media.amp
