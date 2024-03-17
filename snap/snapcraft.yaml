@@ -8,6 +8,8 @@
 
   grade: stable 
   confinement: strict
+  license: The Unlicense
+  contact: michel.promonet@free.fr
 
   parts:
     rtsp2ws:
@@ -23,7 +25,7 @@
 
     local-parts:
       plugin: dump
-      source: ./config.json
+      source: ./local
       source-type: local
 
   apps:
