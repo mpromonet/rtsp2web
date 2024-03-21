@@ -2,7 +2,7 @@
 [![GithubCI](https://github.com/mpromonet/rtsp2ws/workflows/C/C++%20CI%20linux/badge.svg)](https://github.com/mpromonet/rtsp2ws/actions)
 [![GithubCI](https://github.com/mpromonet/rtsp2ws/workflows/C/C++%20CI%20windows/badge.svg)](https://github.com/mpromonet/rtsp2ws/actions)
 
-# rtsp2ws
+# rtsp2web
 
 This is a simple application that connect to RTSP streams, send compressed data over websocket and then decode on browser side using [webcodec](https://github.com/w3c/webcodecs)
 
@@ -32,16 +32,16 @@ Using Docker image
 ===============
 You can start the application using the docker image :
 
-        docker run -p 8080:8080 ghcr.io/mpromonet/rtsp2ws
+        docker run -p 8080:8080 ghcr.io/mpromonet/rtsp2web
 
 The container entry point is the application, then you can :
 
 * get the help using :
 
-        docker run ghcr.io/mpromonet/rtsp2ws -h
+        docker run ghcr.io/mpromonet/rtsp2web -h
 
 * run the container specifying parameters :
 
-        docker run -p 8080:8080 ghcr.io/mpromonet/rtsp2ws rtsp://37.157.51.30/axis-media/media.amp rtsp://71.83.5.156/axis-media/media.amp rtsp://86.44.41.160/axis-media/media.amp 
-        docker run -p 8080:8080 -v $PWD/keycert.pem:/tmp/keycert.pem ghcr.io/mpromonet/rtsp2ws -P 8080s -c /tmp/keycert.pem rtsp://37.157.51.30/axis-media/media.amp rtsp://71.83.5.156/axis-media/media.amp
+        docker run -p 8080:8080 ghcr.io/mpromonet/rtsp2web rtsp://37.157.51.30/axis-media/media.amp rtsp://71.83.5.156/axis-media/media.amp rtsp://86.44.41.160/axis-media/media.amp 
+        docker run -p 8080:8080 -v $PWD/keycert.pem:/tmp/keycert.pem ghcr.io/mpromonet/rtsp2web -P 8080s -c /tmp/keycert.pem rtsp://37.157.51.30/axis-media/media.amp rtsp://71.83.5.156/axis-media/media.amp
 
