@@ -38,6 +38,6 @@ jobs:
       uses: azure/container-apps-deploy-action@v2
       with:
         imageToDeploy: ghcr.io/${{ github.repository }}:latest
-        containerAppName: rtsp2ws
+        containerAppName: rtsp2web
         resourceGroup: deploy
         targetPort: 8080
