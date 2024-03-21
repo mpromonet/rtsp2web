@@ -8,7 +8,6 @@
                 
         "VyhladJazero": {"video": "rtsp://stream.strba.sk:1935/strba/VYHLAD_JAZERO.stream"}, 
 
-        "Zeeland": { "video": "rtsp://213.34.225.97/axis-media/media.amp", "position":"51.5,3.613890"},
         "Vancouver": { "video": "rtsp://174.6.126.86/axis-media/media.amp", "position":"49.249660,-123.119340"},
 
         "Bedford Hills": {"video": "rtsp://73.114.177.111/axis-media/media.amp"},
@@ -17,7 +16,6 @@
 
         "Great Falls": {"video": "rtsp://76.75.8.116/axis-media/media.amp", "position":"47.551039,-111.539400"},
         "Western Cape": {"video":"rtsp://196.21.92.82/axis-media/media.amp", "position":"-33.925840,18.423220"},
-        "Mendoza": {"video":"rtsp://190.113.172.8/", "position":"-32.890840,-68.827170"},
         "Nordland": {"video":"rtsp://77.110.228.219/axis-media/media.amp", "position":"67.280000,14.405010" },
 
         "Allendale": {"video":"rtsp://71.83.5.156/axis-media/media.amp?videocodec=h265", "position":"42.972250,-85.953650" },
