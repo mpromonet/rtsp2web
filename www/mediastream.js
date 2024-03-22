@@ -50,6 +50,7 @@ export class MediaStream {
         this.ws = new WebSocket(wsurl.href);
         this.ws.binaryType = 'arraybuffer';
         this.ws.onopen = () => clearTimeout(this.reconnectTimer);
+        this.ws.onerror = () => console.log(`WebSocket error`);
         this.ws.onmessage = (message) => this.onMessage(message);
         this.ws.onclose = () => this.reconnectTimer = setTimeout(() => this.connect(stream), 1000);
     }
@@ -59,8 +60,9 @@ export class MediaStream {
             clearTimeout(this.reconnectTimer);
             this.reconnectTimer = null;
         }
-        if (this.ws  && this.ws.readyState === WebSocket.OPEN) {
+        if (this.ws) {
             this.ws.onclose = () => {};
+            this.ws.onerror = () => {};
             this.ws.close();
         }
         this.ws = null;

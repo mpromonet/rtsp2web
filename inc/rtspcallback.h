@@ -186,8 +186,7 @@ class RTSPCallback : public RTSPConnection::Callback
         bool onH264Config(const char* id, const char* sdp) {
             const char* pattern="sprop-parameter-sets=";
             const char* sprop=strstr(sdp, pattern);
-            if (sprop)
-            {
+            if (sprop) {
                 std::string sdpstr(extractProp(sprop+strlen(pattern)));
                 
                 std::string sps=sdpstr.substr(0, sdpstr.find_first_of(","));

@@ -64,7 +64,7 @@ class VideoWsElement extends HTMLElement {
     
     attributeChangedCallback(name, oldValue, newValue) {
         console.log(`Attribute ${name} has changed.`);
-        if (name === "url") {
+        if (name === "url" && oldValue !== newValue) {
             this.mediaStream.connect(newValue);
         }
     }

@@ -16,6 +16,6 @@
 <script type="module">
     fetch("/api/version").then(r => r.json()).then(r => version.innerText = r);
 
-    videows.setAttribute("url", location.search.slice(1) || "/ws0");
+    videows.setAttribute("url", location.search.slice(1) || "/stream0");
 </script>
 </html>
