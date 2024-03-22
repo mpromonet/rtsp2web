@@ -49,6 +49,7 @@ export class MediaStream {
         console.log(`Connecting WebSocket to ${wsurl}`);
         this.ws = new WebSocket(wsurl.href);
         this.ws.binaryType = 'arraybuffer';
+        this.ws.onopen = () => clearTimeout(this.reconnectTimer);
         this.ws.onmessage = (message) => this.onMessage(message);
         this.ws.onclose = () => this.reconnectTimer = setTimeout(() => this.connect(stream), 1000);
     }

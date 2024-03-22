@@ -7,21 +7,29 @@
 
 @import "nav.css";
 
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  flex: 1;
+}
+
 #content {
-  height: calc(100vh - 100px);
+  height: 100%;
+  flex: auto;
   overflow-y: auto;
-  text-align: center;
 }
-h1 {
-  text-align: center;
-}
+
 footer {
   text-align: center;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  position: absolute;
+  flex: 1;
 }
+
 footer > * {
   display: inline;
-}    
+}
