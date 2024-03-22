@@ -40,7 +40,6 @@ class Rtsp2Ws
 
         void addStream(const std::string & wsurl, const std::string & rtspurl, int rtptransport, int verbose) {
             m_streams[wsurl] = new Rtsp2WsStream(m_httpServer, wsurl, rtspurl, rtptransport, verbose);
-            m_httpServer.addWebSocket(wsurl);
         }
 
         std::map<std::string,HttpServerRequestHandler::httpFunction>& getHttpFunc() {
@@ -52,6 +51,7 @@ class Rtsp2Ws
                         Json::Value answer(Json::objectValue);
                         for (auto & it : this->m_streams) {
                                 answer[it.first] = it.second->toJSON();
+                                answer[it.first]["connections"] = m_httpServer.getNbConnections(it.first);
                         }
                         return answer;
                 };                
