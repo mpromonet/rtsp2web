@@ -1,5 +1,6 @@
 <html>
 <head>
+    <title>RTSP2Web</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" type="text/css" href="style.css">
     <script type="module" src="./video-ws.js"></script>
@@ -16,6 +17,8 @@
 <script type="module">
     fetch("/api/version").then(r => r.json()).then(r => version.innerText = r);
 
-    videows.setAttribute("url", location.search.slice(1) || "/stream0");
+    const stream = location.search.slice(1) || "/stream0";
+    videows.setAttribute("url", stream);
+    document.title = stream.slice(1);
 </script>
 </html>
