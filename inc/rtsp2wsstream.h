@@ -16,11 +16,15 @@
 #include <thread>
 
 #include "rtspcallback.h"
+#include "WebsocketHandler.h"
 
-class Rtsp2WsStream
+class Rtsp2WsStream : public WebsocketHandler
 {
     public:
         Rtsp2WsStream(HttpServerRequestHandler &httpServer, const std::string & wsurl, const std::string & rtspurl, int rtptransport, int verbose) :
+            WebsocketHandler(httpServer.getCallbacks()),
+            m_httpServer(httpServer),
+            m_wsurl(wsurl),
             m_stop(0),
             m_env(m_stop),
             m_cb(httpServer, wsurl),
@@ -28,7 +32,7 @@ class Rtsp2WsStream
             m_thread(std::thread([this]() {
                 m_env.mainloop();	
             })) {
-                httpServer.addWebSocket(wsurl);
+                httpServer.addWebSocket(wsurl, this);
         }
 
         Json::Value toJSON() {
@@ -38,9 +42,27 @@ class Rtsp2WsStream
         virtual ~Rtsp2WsStream() {
             m_stop = 1;
             m_thread.join();
+            m_httpServer.removeWebSocket(m_wsurl);
         }
 
     private:
+        bool handleConnection(CivetServer *server, const struct mg_connection *conn) override {
+            if (this->getNbConnections() == 0) {
+                std::cout << "first connection " << m_wsurl << std::endl;
+            }
+            return WebsocketHandler::handleConnection(server, conn);
+        }
+
+        void  handleClose(CivetServer *server, const struct mg_connection *conn) override {
+            WebsocketHandler::handleClose(server, conn);
+            if (this->getNbConnections() == 0) {
+                std::cout << "no more connection " << m_wsurl << std::endl;
+            }
+        }
+
+    private:
+        HttpServerRequestHandler &                                    m_httpServer;
+        const std::string                                             m_wsurl;
         char                                                          m_stop;    
         Environment                                                   m_env;
         RTSPCallback                                                  m_cb;
