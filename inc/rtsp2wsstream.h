@@ -48,7 +48,7 @@ class Rtsp2WsStream : public WebsocketHandler
     private:
         bool handleConnection(CivetServer *server, const struct mg_connection *conn) override {
             if (this->getNbConnections() == 0) {
-                std::cout << "first connection " << m_wsurl << std::endl;
+                m_rtspClient.start();
             }
             return WebsocketHandler::handleConnection(server, conn);
         }
@@ -56,7 +56,7 @@ class Rtsp2WsStream : public WebsocketHandler
         void  handleClose(CivetServer *server, const struct mg_connection *conn) override {
             WebsocketHandler::handleClose(server, conn);
             if (this->getNbConnections() == 0) {
-                std::cout << "no more connection " << m_wsurl << std::endl;
+                m_rtspClient.stop();
             }
         }
 
