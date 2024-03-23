@@ -51,7 +51,6 @@ class Rtsp2Ws
                         Json::Value answer(Json::objectValue);
                         for (auto & it : this->m_streams) {
                                 answer[it.first] = it.second->toJSON();
-                                answer[it.first]["connections"] = m_httpServer.getNbConnections(it.first);
                         }
                         return answer;
                 };                

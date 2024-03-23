@@ -25,8 +25,7 @@ class Rtsp2WsStream : public WebsocketHandler
             WebsocketHandler(httpServer.getCallbacks()),
             m_httpServer(httpServer),
             m_wsurl(wsurl),
-            m_stop(0),
-            m_env(m_stop),
+            m_env(),
             m_cb(httpServer, wsurl),
             m_rtspClient(m_env, &m_cb, rtspurl.c_str(), 10, rtptransport, verbose),
             m_thread(std::thread([this]() {
@@ -36,11 +35,14 @@ class Rtsp2WsStream : public WebsocketHandler
         }
 
         Json::Value toJSON() {
-            return m_cb.toJSON();
+            Json::Value json(m_cb.toJSON());
+            json["connections"] = this->getNbConnections();
+            return json;
         }
 
         virtual ~Rtsp2WsStream() {
-            m_stop = 1;
+            m_rtspClient.stop();
+            m_env.stop();
             m_thread.join();
             m_httpServer.removeWebSocket(m_wsurl);
         }
@@ -63,7 +65,6 @@ class Rtsp2WsStream : public WebsocketHandler
     private:
         HttpServerRequestHandler &                                    m_httpServer;
         const std::string                                             m_wsurl;
-        char                                                          m_stop;    
         Environment                                                   m_env;
         RTSPCallback                                                  m_cb;
         RTSPConnection                                                m_rtspClient;
