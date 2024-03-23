@@ -1,18 +1,19 @@
 <html>
 <head>
+    <title>RTSP2Web</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" type="text/css" href="style.css">
-    <script type="module" src="./wc-video-ws.js"></script>
+    <script type="module" src="./video-ws.js"></script>
 </head>
 <body>
     <header>
         <nav id="menu"></nav>
     </header>    
     <div id="content">
-        <wc-video-ws id="videows"></wc-video-ws>
+        <video-ws id="videows"></video-ws>
     </div>
     <footer>
-            <a href="https://github.com/mpromonet/rtsp2ws">rtsp2ws</a>
+            <a href="https://github.com/mpromonet/rtsp2web">rtsp2web</a>
             <div id="version"></div>
     </footer>
 </body>
@@ -23,6 +24,8 @@
         for (const opt of menu.getElementsByTagName('a')) {
             if (opt.url === stream) {
                 videows.setAttribute("url", stream);
+                videows.title = stream.substring(1);
+                videows.onclick = () => window.open("/video.html?" + stream, '_blank', 'noopener, noreferrer');
                 opt.className = "active";
             } else {
 		        opt.className = "";

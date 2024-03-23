@@ -51,10 +51,6 @@ class VideoWsElement extends HTMLElement {
             }
         };        
         video.play();
-
-        if (this.hasAttribute("url")) {
-            this.mediaStream.connect(this.getAttribute("url"));
-        }
     }
   
     disconnectedCallback() {
@@ -70,4 +66,4 @@ class VideoWsElement extends HTMLElement {
     }
   }
   
-  customElements.define("wc-video-ws", VideoWsElement);
+  customElements.define("video-ws", VideoWsElement);
