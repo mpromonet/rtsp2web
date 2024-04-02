@@ -25,7 +25,10 @@
             if (opt.url === stream) {
                 videows.setAttribute("url", stream);
                 videows.title = stream.substring(1);
-                videows.onclick = () => window.open("/video.html?" + stream, '_blank', 'noopener, noreferrer');
+                videows.onclick = (e) => {
+                    e.preventDefault();
+                    window.open("/video.html?" + stream, '_blank', 'noopener, noreferrer'); 
+                }
                 opt.className = "active";
             } else {
 		        opt.className = "";

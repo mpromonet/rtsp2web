@@ -42,7 +42,10 @@
                 video.playsinline = true;
                 video.controls = true;
                 video.preload = "none";
-                video.onclick = () => window.open("/video.html?" + stream, '_blank', 'noopener, noreferrer');
+                video.onclick = (e) => {
+                    e.preventDefault();
+                    window.open("/video.html?" + stream, '_blank', 'noopener, noreferrer'); 
+                }
                 content.appendChild(video);
 
                 const canvas = document.createElement("canvas");
