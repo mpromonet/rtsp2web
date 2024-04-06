@@ -7,12 +7,13 @@
 
 
 export class AudioProcessor {
+    decoder = null;
+
     constructor(audioContext) {
         this.audioContext = audioContext;
         this.audioBufferQueue = { bufferQueue: new Set(), nextBufferTime: 0 };
         this.gain = this.audioContext.createGain();
         this.gain.connect(this.audioContext.destination);
-        this.decoder = null;
     }
 
     async processAudioFrame(frame) {

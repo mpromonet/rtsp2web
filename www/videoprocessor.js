@@ -9,6 +9,9 @@ import { WebGPURenderer } from './webgpu-renderer.js';
 import { Canvas2DRenderer } from './canvas2d-renderer.js';
 
 export class VideoProcessor {
+    renderer = null;
+    decoder = null;
+
     constructor(videoCanvas) {
         try {
             this.renderer = new WebGPURenderer(videoCanvas);
@@ -16,7 +19,6 @@ export class VideoProcessor {
             console.log(`WebGPU not supported: ${e.message} fallback to Canvas2DRenderer`);
             this.renderer = new Canvas2DRenderer(videoCanvas);
         }
-        this.decoder = null;
     }
 
     async decodeFrame(metadata, data) {

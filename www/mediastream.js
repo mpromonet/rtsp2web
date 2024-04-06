@@ -9,11 +9,11 @@ import { VideoProcessor } from './videoprocessor.js';
 import { AudioProcessor } from './audioprocessor.js';
 
 export class MediaStream {
-    constructor(videoCanvas, audioContext) {
-        this.metadata = {media:'', codec: '', freq: 0, channels: 0, ts: 0, type: ''};
-        this.reconnectTimer = null;
-        this.ws = null;
+    reconnectTimer = null;
+    ws = null;
+    metadata = {media:'', codec: '', freq: 0, channels: 0, ts: 0, type: ''};
 
+    constructor(videoCanvas, audioContext) {
         this.videoProcessor = new VideoProcessor(videoCanvas);
         if (audioContext) {
             this.audioProcessor = new AudioProcessor(audioContext);
