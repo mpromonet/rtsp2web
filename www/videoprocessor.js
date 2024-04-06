@@ -5,9 +5,16 @@
 **
 ** -------------------------------------------------------------------------*/
 
+import { WebGPURenderer } from './webgpu-renderer.js';
+import { Canvas2DRenderer } from './canvas2d-renderer.js';
+
 export class VideoProcessor {
     constructor(videoCanvas) {
-        this.videoContext = videoCanvas.getContext("2d");
+        try {
+            this.renderer = new WebGPURenderer(videoCanvas)
+        } catch(e) {
+            this.render = new Canvas2DRenderer(videoCanvas)
+        }
         this.decoder = null;
     }
 
@@ -62,14 +69,11 @@ export class VideoProcessor {
     }
 
     clearFrame() {
-        this.videoContext.clearRect(0, 0, this.videoContext.canvas.width, this.videoContext.canvas.height);
+        this.renderer.clear();
     }
 
     displayFrame(frame) {
-        this.videoContext.canvas.width = frame.displayWidth;
-        this.videoContext.canvas.height = frame.displayHeight;
-        this.videoContext.drawImage(frame, 0, 0);
-        frame.close();
+        this.renderer.draw(frame);
     }
 
     createVideoDecoder() {

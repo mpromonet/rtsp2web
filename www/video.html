@@ -19,6 +19,8 @@
 
     const stream = location.search.slice(1) || "/stream0";
     videows.setAttribute("url", stream);
-    document.title = stream.slice(1);
+    videows.title = stream.substring(1);
+    videows.onclick = (e) => e.preventDefault();    
+    document.title = stream.substring(1);
 </script>
 </html>
