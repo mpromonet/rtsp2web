@@ -13,7 +13,8 @@ export class VideoProcessor {
         try {
             this.renderer = new WebGPURenderer(videoCanvas)
         } catch(e) {
-            this.render = new Canvas2DRenderer(videoCanvas)
+            console.log(`WebGPU not supported: ${e.message} fallback to Canvas2DRenderer`);
+            this.renderer = new Canvas2DRenderer(videoCanvas)
         }
         this.decoder = null;
     }

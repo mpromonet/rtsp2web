@@ -58,6 +58,9 @@ export class WebGPURenderer {
 
   constructor(canvas) {
     this.#canvas = canvas;
+    if (!navigator.gpu) {
+      throw new Error("WebGPU is not supported in this browser.");
+    }
     this.#started = this.#start();
   }
 
@@ -93,63 +96,59 @@ export class WebGPURenderer {
     this.#sampler = this.#device.createSampler({});
   }
 
-  async draw(frame) {
-    // Don't try to draw any frames until the context is configured.
-    await this.#started;
+  _createBindGroup(frame) {
+    if (frame) {
+      this.#canvas.width = frame.displayWidth;
+      this.#canvas.height = frame.displayHeight;
 
-    this.#canvas.width = frame.displayWidth;
-    this.#canvas.height = frame.displayHeight;
+      return this.#device.createBindGroup({
+        layout: this.#pipeline.getBindGroupLayout(0),
+        entries: [
+          {binding: 1, resource: this.#sampler},
+          {binding: 2, resource: this.#device.importExternalTexture({source: frame})}
+        ],
+      });
+    } else{
+      return null;
+    }
+  }
 
-    const uniformBindGroup = this.#device.createBindGroup({
-      layout: this.#pipeline.getBindGroupLayout(0),
-      entries: [
-        {binding: 1, resource: this.#sampler},
-        {binding: 2, resource: this.#device.importExternalTexture({source: frame})}
-      ],
-    });
-
+  _createCommandEncoder() {
     const commandEncoder = this.#device.createCommandEncoder();
     const view = this.#ctx.getCurrentTexture().createView();
     const renderPassDescriptor = {
       colorAttachments: [
         {
           view,
-          clearValue: [1.0, 0.0, 0.0, 1.0],
+          clearValue: [0.0, 0.0, 0.0, 1.0],
           loadOp: "clear",
           storeOp: "store",
         },
       ],
     };
+    const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);    
 
-    const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
-    passEncoder.setPipeline(this.#pipeline);
-    passEncoder.setBindGroup(0, uniformBindGroup);
-    passEncoder.draw(6, 1, 0, 0);
-    passEncoder.end();
-    this.#device.queue.submit([commandEncoder.finish()]);
-
-    frame.close();
+    return {commandEncoder, passEncoder};
   }
 
-  async clear() {
+  async draw(frame) {
     // Don't try to draw any frames until the context is configured.
     await this.#started;
 
-    const commandEncoder = this.#device.createCommandEncoder();
-    const view = this.#ctx.getCurrentTexture().createView();
-
-    const renderPassDescriptor = {
-        colorAttachments: [{
-            view,
-            loadOp: "clear",
-            storeOp: "store",
-            loadValue: { r: 0.0, g: 0.0, b: 0.0, a: 1.0 },
-        }],
-    };
-
-    const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);
+    const uniformBindGroup = this._createBindGroup(frame);
+    const {commandEncoder, passEncoder} = this._createCommandEncoder();
+    if (uniformBindGroup) {
+      passEncoder.setPipeline(this.#pipeline);
+      passEncoder.setBindGroup(0, uniformBindGroup);
+      passEncoder.draw(6, 1, 0, 0);
+    }
     passEncoder.end();
-
     this.#device.queue.submit([commandEncoder.finish()]);
+
+    frame?.close();
+  }
+
+  async clear() {
+    this.draw();
   }
 };
