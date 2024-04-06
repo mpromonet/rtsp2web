@@ -120,7 +120,7 @@ export class WebGPURenderer {
       colorAttachments: [
         {
           view,
-          clearValue: [0.0, 0.0, 0.0, 1.0],
+          clearValue: [1.0, 1.0, 1.0, 1.0],
           loadOp: "clear",
           storeOp: "store",
         },
@@ -140,12 +140,30 @@ export class WebGPURenderer {
     if (uniformBindGroup) {
       passEncoder.setPipeline(this.#pipeline);
       passEncoder.setBindGroup(0, uniformBindGroup);
-      passEncoder.draw(6, 1, 0, 0);
+      passEncoder.draw(6);
     }
     passEncoder.end();
     this.#device.queue.submit([commandEncoder.finish()]);
 
     frame?.close();
+  }
+
+  async drawText(text) {
+    const canvas = new OffscreenCanvas(this.#ctx.canvas.width, this.#ctx.canvas.height);
+    const context = canvas.getContext('2d');
+    context.fillStyle = 'white';
+    context.fillRect(0, 0, this.#canvas.width, this.#canvas.height);
+    context.fillStyle = 'black';    
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.font = "16px Arial";
+    const centerX = this.#ctx.canvas.width / 2;
+    const centerY = this.#ctx.canvas.height / 2;    
+    context.fillText(text, centerX, centerY);    
+    const bitmap = await createImageBitmap(canvas);
+    const frame = new VideoFrame(bitmap, { timestamp: performance.now() });
+
+    await this.draw(frame);
   }
 
   async clear() {

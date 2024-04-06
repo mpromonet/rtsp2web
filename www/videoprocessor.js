@@ -11,10 +11,10 @@ import { Canvas2DRenderer } from './canvas2d-renderer.js';
 export class VideoProcessor {
     constructor(videoCanvas) {
         try {
-            this.renderer = new WebGPURenderer(videoCanvas)
+            this.renderer = new WebGPURenderer(videoCanvas);
         } catch(e) {
             console.log(`WebGPU not supported: ${e.message} fallback to Canvas2DRenderer`);
-            this.renderer = new Canvas2DRenderer(videoCanvas)
+            this.renderer = new Canvas2DRenderer(videoCanvas);
         }
         this.decoder = null;
     }
@@ -45,6 +45,7 @@ export class VideoProcessor {
                 console.log(`decoder supported with codec ${codec}`);
                 this.decoder.configure(config);
             } else {
+                this.renderer.drawText(`Codec ${codec} not supported`);
                 return Promise.reject(`${codec} is not supported`);
             }
         }
@@ -65,6 +66,7 @@ export class VideoProcessor {
         } else if (metadata.codec === 'jpeg') {
             return this.onJPEGFrame(metadata, data);
         } else {
+            this.renderer.drawText(`Codec ${metadata.codec} unknown`);
             return Promise.reject(`Unknown format`);
         }
     }
