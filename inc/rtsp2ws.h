@@ -23,7 +23,12 @@
 
 int logger(const struct mg_connection *conn, const char *message) 
 {
-	fprintf(stderr, "%s\n", message);
+    const struct mg_request_info *req_info = mg_get_request_info(conn);
+
+	fprintf(stderr, "[%s:%d] %s\n"
+                    , req_info ? req_info->remote_addr : ""
+                    , req_info ? req_info->remote_port: 0
+                    , message);
 	return 0;
 }
 
@@ -49,14 +54,14 @@ class Rtsp2Ws
                 };
                 m_httpfunc["/api/streams"] = [this](const struct mg_request_info *, const Json::Value &) -> Json::Value {
                         Json::Value answer(Json::objectValue);
-                        for (auto & it : this->m_streams) {
+                        for (auto & it : m_streams) {
                                 answer[it.first] = it.second->toJSON();
                         }
                         return answer;
                 };                
                 m_httpfunc["/api/help"]    = [this](const struct mg_request_info *, const Json::Value & ) -> Json::Value {
                         Json::Value answer(Json::arrayValue);
-                        for (auto it : this->m_httpfunc) {
+                        for (auto it : m_httpfunc) {
                                 answer.append(it.first);
                         }
                         return answer;

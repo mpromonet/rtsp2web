@@ -36,7 +36,7 @@ class Rtsp2WsStream : public WebsocketHandler
 
         Json::Value toJSON() {
             Json::Value json(m_cb.toJSON());
-            json["connections"] = this->getNbConnections();
+            json["connections"] = this->getConnections();
             return json;
         }
 
