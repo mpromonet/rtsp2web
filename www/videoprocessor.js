@@ -58,7 +58,7 @@ export class VideoProcessor {
         const decoder = new ImageDecoder({data, type: 'image/jpeg'});
         const image = await decoder.decode();
         const frame = new VideoFrame(image.image, {timestamp: metadata.ts});
-        this.displayFrame(frame);
+        this.renderer.draw(frame)
         return Promise.resolve();
     }
 
@@ -73,23 +73,15 @@ export class VideoProcessor {
         }
     }
 
-    clearFrame() {
-        this.renderer.clear();
-    }
-
-    displayFrame(frame) {
-        this.renderer.draw(frame);
-    }
-
     createVideoDecoder() {
         return new VideoDecoder({
-                output: (frame) => this.displayFrame(frame),
-                error: (e) => console.log(e.message),
+            output: (frame) => this.renderer.draw(frame),
+            error: (e) => console.log(e.message),
         });
     }    
 
     close() {
-        this.clearFrame();
+        this.renderer.clear()
         if (this.decoder && this.decoder.state !== "closed") {
             this.decoder.close();
         }

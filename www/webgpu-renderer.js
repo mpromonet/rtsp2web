@@ -157,16 +157,14 @@ export class WebGPURenderer {
     context.textAlign = 'center';
     context.textBaseline = 'middle';
     context.font = "16px Arial";
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;    
-    context.fillText(text, centerX, centerY);    
+    context.fillText(text, canvas.width/2, canvas.height/2);    
     const bitmap = await createImageBitmap(canvas);
-    const frame = new VideoFrame(bitmap, { timestamp: performance.now() });
 
-    await this.draw(frame);
+    const frame = new VideoFrame(bitmap, { timestamp: performance.now() });
+    return this.draw(frame);
   }
 
   async clear() {
-    this.draw();
+    return this.draw();
   }
 };
