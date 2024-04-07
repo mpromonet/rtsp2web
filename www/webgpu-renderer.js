@@ -1,18 +1,21 @@
+/* ---------------------------------------------------------------------------
+** This software is in the public domain, furnished "as is", without technical
+** support, and with no warranty, express or implied, as to its usefulness for
+** any purpose.
+**
+** -------------------------------------------------------------------------*/
+
 export class WebGPURenderer {
-  #canvas = null;
-  #ctx = null;
+  canvas = null;
+  ctx = null;
 
-  // Promise for `#start()`, WebGPU setup is asynchronous.
-  #started = null;
+  started = null;
 
-  // WebGPU state shared between setup and drawing.
-  #format = null;
-  #device = null;
-  #pipeline = null;
-  #sampler = null;
+  device = null;
+  pipeline = null;
+  sampler = null;
 
-  // Generates two triangles covering the whole canvas.
-  static vertexShaderSource = `
+  static shaderSource = `
     struct VertexOutput {
       @builtin(position) Position: vec4<f32>,
       @location(0) uv: vec2<f32>,
@@ -43,10 +46,7 @@ export class WebGPURenderer {
       output.uv = uv[VertexIndex];
       return output;
     }
-  `;
 
-  // Samples the external texture using generated UVs.
-  static fragmentShaderSource = `
     @group(0) @binding(1) var mySampler: sampler;
     @group(0) @binding(2) var myTexture: texture_external;
     
@@ -57,55 +57,55 @@ export class WebGPURenderer {
   `;
 
   constructor(canvas) {
-    this.#canvas = canvas;
+    this.canvas = canvas;
     if (!navigator.gpu) {
       throw new Error("WebGPU is not supported in this browser.");
     }
-    this.#started = this.#start();
+    this.started = this._start();
   }
 
-  async #start() {
+  async _start() {
     const adapter = await navigator.gpu.requestAdapter();
-    this.#device = await adapter.requestDevice();
-    this.#format = navigator.gpu.getPreferredCanvasFormat();
+    this.device = await adapter.requestDevice();
+    const format = navigator.gpu.getPreferredCanvasFormat();
 
-    this.#ctx = this.#canvas.getContext("webgpu");
-    this.#ctx.configure({
-      device: this.#device,
-      format: this.#format,
+    this.ctx = this.canvas.getContext("webgpu");
+    this.ctx.configure({
+      device: this.device,
+      format,
       alphaMode: "opaque",
     });
 
-    this.#pipeline = this.#device.createRenderPipeline({
+    const module =  this.device.createShaderModule({code: WebGPURenderer.shaderSource});
+    this.pipeline = this.device.createRenderPipeline({
       layout: "auto",
       vertex: {
-        module: this.#device.createShaderModule({code: WebGPURenderer.vertexShaderSource}),
+        module,
         entryPoint: "vert_main"
       },
       fragment: {
-        module: this.#device.createShaderModule({code: WebGPURenderer.fragmentShaderSource}),
+        module,
         entryPoint: "frag_main",
-        targets: [{format: this.#format}]
+        targets: [{format}]
       },
       primitive: {
         topology: "triangle-list"
       }
     });
   
-    // Default sampler configuration is nearset + clamp.
-    this.#sampler = this.#device.createSampler({});
+    this.sampler = this.device.createSampler({});
   }
 
   _createBindGroup(frame) {
     if (frame) {
-      this.#canvas.width = frame.displayWidth;
-      this.#canvas.height = frame.displayHeight;
+      this.canvas.width = frame.displayWidth;
+      this.canvas.height = frame.displayHeight;
 
-      return this.#device.createBindGroup({
-        layout: this.#pipeline.getBindGroupLayout(0),
+      return this.device.createBindGroup({
+        layout: this.pipeline.getBindGroupLayout(0),
         entries: [
-          {binding: 1, resource: this.#sampler},
-          {binding: 2, resource: this.#device.importExternalTexture({source: frame})}
+          {binding: 1, resource: this.sampler},
+          {binding: 2, resource: this.device.importExternalTexture({source: frame})}
         ],
       });
     } else{
@@ -113,9 +113,10 @@ export class WebGPURenderer {
     }
   }
 
-  _createCommandEncoder() {
-    const commandEncoder = this.#device.createCommandEncoder();
-    const view = this.#ctx.getCurrentTexture().createView();
+  _createCommandEncoder(frame) {
+    const uniformBindGroup = this._createBindGroup(frame);
+    const commandEncoder = this.device.createCommandEncoder();
+    const view = this.ctx.getCurrentTexture().createView();
     const renderPassDescriptor = {
       colorAttachments: [
         {
@@ -127,29 +128,27 @@ export class WebGPURenderer {
       ],
     };
     const passEncoder = commandEncoder.beginRenderPass(renderPassDescriptor);    
-
-    return {commandEncoder, passEncoder};
-  }
-
-  async draw(frame) {
-    // Don't try to draw any frames until the context is configured.
-    await this.#started;
-
-    const uniformBindGroup = this._createBindGroup(frame);
-    const {commandEncoder, passEncoder} = this._createCommandEncoder();
     if (uniformBindGroup) {
-      passEncoder.setPipeline(this.#pipeline);
+      passEncoder.setPipeline(this.pipeline);
       passEncoder.setBindGroup(0, uniformBindGroup);
       passEncoder.draw(6);
     }
     passEncoder.end();
-    this.#device.queue.submit([commandEncoder.finish()]);
+
+    return commandEncoder;
+  }
+
+  async draw(frame) {
+    await this.started;
+
+    const commandEncoder = this._createCommandEncoder(frame);
+    this.device.queue.submit([commandEncoder.finish()]);
 
     frame?.close();
   }
 
-  async drawText(text) {
-    const canvas = new OffscreenCanvas(this.#ctx.canvas.width, this.#ctx.canvas.height);
+  _createTextCanvas(text) {
+    const canvas = new OffscreenCanvas(this.ctx.canvas.width, this.ctx.canvas.height);
     const context = canvas.getContext('2d');
     context.fillStyle = 'white';
     context.fillRect(0, 0, canvas.width, canvas.height);
@@ -157,9 +156,13 @@ export class WebGPURenderer {
     context.textAlign = 'center';
     context.textBaseline = 'middle';
     context.font = "16px Arial";
-    context.fillText(text, canvas.width/2, canvas.height/2);    
-    const bitmap = await createImageBitmap(canvas);
+    context.fillText(text, canvas.width/2, canvas.height/2);
+    return canvas;
+  }
 
+  async drawText(text) {
+    const canvas = this._createTextCanvas(text);
+    const bitmap = await createImageBitmap(canvas);
     const frame = new VideoFrame(bitmap, { timestamp: performance.now() });
     return this.draw(frame);
   }
