@@ -6,7 +6,6 @@
 ** -------------------------------------------------------------------------*/
 
 export class WebGPURenderer {
-  canvas = null;
   ctx = null;
 
   started = null;
@@ -57,19 +56,18 @@ export class WebGPURenderer {
   `;
 
   constructor(canvas) {
-    this.canvas = canvas;
     if (!navigator.gpu) {
       throw new Error("WebGPU is not supported in this browser.");
     }
-    this.started = this._start();
+    this.started = this._start(canvas);
   }
 
-  async _start() {
+  async _start(canvas) {
     const adapter = await navigator.gpu.requestAdapter();
     this.device = await adapter.requestDevice();
     const format = navigator.gpu.getPreferredCanvasFormat();
 
-    this.ctx = this.canvas.getContext("webgpu");
+    this.ctx = canvas.getContext("webgpu");
     this.ctx.configure({
       device: this.device,
       format,
@@ -98,8 +96,8 @@ export class WebGPURenderer {
 
   _createBindGroup(frame) {
     if (frame) {
-      this.canvas.width = frame.displayWidth;
-      this.canvas.height = frame.displayHeight;
+      this.ctx.canvas.width = frame.displayWidth;
+      this.ctx.canvas.height = frame.displayHeight;
 
       return this.device.createBindGroup({
         layout: this.pipeline.getBindGroupLayout(0),
