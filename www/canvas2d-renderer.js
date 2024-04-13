@@ -5,15 +5,12 @@
 **
 ** -------------------------------------------------------------------------*/
 
-import { Spinner } from './spinner.js';
-
 export class Canvas2DRenderer {
   ctx = null;
   spinner = null;
 
   constructor(canvas) {
     this.ctx = canvas.getContext("2d");
-    this.spinner = new Spinner(canvas);
   }
 
   draw(frame) {
@@ -27,7 +24,6 @@ export class Canvas2DRenderer {
 
 
   drawText(text) {
-    this.spinner.stop();
     this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     this.ctx.font = "16px Arial";
     this.ctx.textAlign = 'center'; 
@@ -37,6 +33,5 @@ export class Canvas2DRenderer {
 
   clear() {
     this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
-    this.spinner.start();
   }
 };

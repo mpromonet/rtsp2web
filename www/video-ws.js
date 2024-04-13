@@ -21,12 +21,64 @@ class VideoWsElement extends HTMLElement {
                     display: block;
                     margin: 0 auto;
                   }
+                  .loading {
+                    position: fixed;
+                    z-index: 999;
+                    height: 2em;
+                    width: 2em;
+                    overflow: visible;
+                    margin: auto;
+                    top: 0;
+                    left: 0;
+                    bottom: 0;
+                    right: 0;
+                  }
+                  
+                  .loading:before {
+                    content: '';
+                    display: block;
+                    position: fixed;
+                    background-color: rgba(0,0,0,0.3);
+                  }
+                  
+                  .loading:not(:required) {
+                    font: 0/0 a;
+                    color: transparent;
+                    text-shadow: none;
+                    background-color: transparent;
+                    border: 0;
+                  }
+                  
+                  .loading:not(:required):after {
+                    content: '';
+                    display: block;
+                    font-size: 10px;
+                    width: 1em;
+                    height: 1em;
+                    margin-top: -0.5em;
+                    animation: spinner 1500ms infinite linear;
+                    border-radius: 0.5em;
+                    box-shadow: rgba(0, 0, 0, 0.75) 1.5em 0 0 0, rgba(0, 0, 0, 0.75) 1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) 0 1.5em 0 0, rgba(0, 0, 0, 0.75) -1.1em 1.1em 0 0, rgba(0, 0, 0, 0.75) -1.5em 0 0 0, rgba(0, 0, 0, 0.75) -1.1em -1.1em 0 0, rgba(0, 0, 0, 0.75) 0 -1.5em 0 0, rgba(0, 0, 0, 0.75) 1.1em -1.1em 0 0;
+                  }
+                  
+                  @keyframes spinner {
+                    0% {
+                      transform: rotate(0deg);
+                    }
+                    100% {
+                      transform: rotate(360deg);
+                    }
+                  }
+                  
                   </style>
-                  <video id="video" muted playsinline controls preload="none"></video>`;      
+                  <div id="videowrapper">
+                      <video id="video" muted playsinline controls preload="none"></video>
+                  </div>`;      
+                  
 
         this.audioContext = new AudioContext();
         const canvas = document.createElement("canvas");
-        this.mediaStream = new MediaStream(canvas, this.audioContext);
+        this.mediaStream = new MediaStream(canvas, this.audioContext, () => this.shadowDOM.getElementById("videowrapper").classList.remove("loading"));
 
         this.stream = canvas.captureStream();
         this.stream.addTrack(this.audioContext.createMediaStreamDestination().stream.getAudioTracks()[0]);          
@@ -49,7 +101,7 @@ class VideoWsElement extends HTMLElement {
                     video.muted = false;
                     break;
             }
-        };        
+        };
         video.play();
     }
   
@@ -61,6 +113,7 @@ class VideoWsElement extends HTMLElement {
     attributeChangedCallback(name, oldValue, newValue) {
         console.log(`Attribute ${name} has changed.`);
         if (name === "url" && oldValue !== newValue) {
+            this.shadowDOM.getElementById("videowrapper").classList.add("loading");
             this.mediaStream.connect(newValue);
         }
     }
