@@ -31,7 +31,6 @@ export class VideoProcessor {
                 data,
             });
             this.decoder.decode(chunk);
-            this?.onloadedcallback(true);
             return Promise.resolve();
         } else {
             return Promise.reject(`${metadata.codec} decoder not configured`);
@@ -62,7 +61,8 @@ export class VideoProcessor {
         const decoder = new ImageDecoder({data, type: 'image/jpeg'});
         const image = await decoder.decode();
         const frame = new VideoFrame(image.image, {timestamp: metadata.ts});
-        this.renderer.draw(frame)
+        this.renderer.draw(frame);
+        this?.onloadedcallback(true);
         return Promise.resolve();
     }
 
@@ -80,7 +80,10 @@ export class VideoProcessor {
 
     createVideoDecoder() {
         return new VideoDecoder({
-            output: (frame) => this.renderer.draw(frame),
+            output: (frame) => {
+                this.renderer.draw(frame);
+                this?.onloadedcallback(true);
+            },
             error: (e) => console.log(e.message),
         });
     }    

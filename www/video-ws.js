@@ -15,14 +15,15 @@ class VideoWsElement extends HTMLElement {
       this.shadowDOM = this.attachShadow({mode: 'open'});
       this.shadowDOM.innerHTML = `
                   <link rel="stylesheet" href="video-ws.css">
-                  <div id="videowrapper" class="loading">
-                      <video id="video" muted playsinline controls preload="none"></video>
+                  <div class="videoContent">
+                    <video id="video" muted playsinline controls preload="none"></video>
+                    <div id="spinner" class="loading"></div>
                   </div>`;      
                   
 
         this.audioContext = new AudioContext();
         const canvas = document.createElement("canvas");
-        this.mediaStream = new MediaStream(canvas, this.audioContext, () => this.shadowDOM.getElementById("videowrapper").classList.remove("loading"));
+        this.mediaStream = new MediaStream(canvas, this.audioContext, () => this.shadowDOM.getElementById("spinner").classList.remove("loading"));
 
         this.stream = canvas.captureStream();
         this.stream.addTrack(this.audioContext.createMediaStreamDestination().stream.getAudioTracks()[0]);          
@@ -57,7 +58,7 @@ class VideoWsElement extends HTMLElement {
     attributeChangedCallback(name, oldValue, newValue) {
         console.log(`Attribute ${name} has changed.`);
         if (name === "url" && oldValue !== newValue) {
-            this.shadowDOM.getElementById("videowrapper").classList.add("loading");
+            this.shadowDOM.getElementById("spinner").classList.add("loading");
             this.mediaStream.connect(newValue);
         }
     }

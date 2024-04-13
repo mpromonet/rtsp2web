@@ -5,17 +5,23 @@ video {
     margin: 0 auto;
 }
 
+.videoContent {
+    position: relative;
+    height: 100%;
+    display: block;
+}
+
 .loading {
-    position: fixed;
+    position: absolute;
     z-index: 999;
     height: 2em;
     width: 2em;
     overflow: visible;
-    margin: auto;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
+    margin: 0 auto;
+    display: block;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .loading:before {
@@ -30,7 +36,6 @@ video {
     color: transparent;
     text-shadow: none;
     background-color: transparent;
-    border: 0;
 }
 
 .loading:not(:required):after {
@@ -49,7 +54,6 @@ video {
     0% {
         transform: rotate(0deg);
     }
-
     100% {
         transform: rotate(360deg);
     }

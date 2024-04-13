@@ -146,7 +146,7 @@ export class WebGPURenderer {
   }
 
   _createTextCanvas(text) {
-    const canvas = new OffscreenCanvas(this.ctx.canvas.width, this.ctx.canvas.height);
+    const canvas = new OffscreenCanvas(640, 640);
     const context = canvas.getContext('2d');
     context.fillStyle = 'white';
     context.fillRect(0, 0, canvas.width, canvas.height);
