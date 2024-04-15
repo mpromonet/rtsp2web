@@ -21,6 +21,19 @@
 #include "rtspconnectionclient.h"
 #include "HttpServerRequestHandler.h"
 
+const int H264_SLICE=1;
+const int H264_IDR=5;
+const int H264_SPS=7;
+const int H264_PPS=8;
+
+const int H265_SLICE=1;
+const int H265_VPS=32;
+const int H265_SPS=33;
+const int H265_PPS=34;
+const int H265_IDR_W_RADL=19;
+const int H265_IDR_N_LP=20;
+
+
 class RTSPCallback : public RTSPConnection::Callback
 {
     class SessionParams
@@ -133,15 +146,15 @@ class RTSPCallback : public RTSPConnection::Callback
         void onH264Data(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) {
             std::string buf(buffer, buffer+size);
             int nalu = buffer[4] & 0x1F;
-            if (nalu == 7) {
+            if (nalu == H264_SPS) {
                 m_sps = buf;
-            } else if (nalu == 8) {
+            } else if (nalu == H264_PPS) {
                 m_pps = buf;
-            } else if  (nalu == 5) {
+            } else if  (nalu == H264_IDR) {
                 buf.insert(0, m_pps);
                 buf.insert(0, m_sps);
             }
-            if (nalu == 5 || nalu == 1) {
+            if (nalu == H264_IDR || nalu == H264_SLICE) {
                 Json::Value data;
                 data["ts"] = Json::Value::UInt64(1000ULL*1000*presentationTime.tv_sec+presentationTime.tv_usec);
                 std::stringstream ss;
@@ -150,7 +163,7 @@ class RTSPCallback : public RTSPConnection::Callback
                 }
                 data["media"] = m_sessions[id].m_media;
                 data["codec"] = "avc1." + ss.str();   
-                if (nalu == 5) {
+                if (nalu == H264_IDR) {
                     data["type"] = "keyframe";
                 }             
                 publish(data, buf);                    
@@ -160,23 +173,23 @@ class RTSPCallback : public RTSPConnection::Callback
         void onH265Data(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) {
             std::string buf(buffer, buffer+size);
             int nalu = (buffer[4] & 0x7E)>>1;
-            if (nalu == 32) {
+            if (nalu == H265_VPS) {
                 m_vps = buf;
-            } else if (nalu == 33) {
+            } else if (nalu == H265_SPS) {
                 m_sps = buf;
-            } else if (nalu == 34) {
+            } else if (nalu == H265_PPS) {
                 m_pps = buf;
-            } else if  (nalu == 19 || nalu == 20) {
+            } else if  (nalu == H265_IDR_W_RADL || nalu == H265_IDR_N_LP) {
                 buf.insert(0, m_pps);
                 buf.insert(0, m_sps);
                 buf.insert(0, m_vps);
             }
-            if (nalu == 19 || nalu ==20 || nalu == 1) {
+            if (nalu == H265_IDR_W_RADL || nalu == H265_IDR_N_LP || nalu == H265_SLICE) {
                 Json::Value data;
                 data["media"] = m_sessions[id].m_media;
                 data["codec"] = "hev1.1.6.L93.B0";
                 data["ts"] = Json::Value::UInt64(1000ULL*1000*presentationTime.tv_sec+presentationTime.tv_usec);
-                if (nalu == 19 || nalu == 20) {
+                if (nalu == H265_IDR_W_RADL || nalu == H265_IDR_N_LP) {
                     data["type"] = "keyframe";
                 }
                 publish(data, buf);                    
