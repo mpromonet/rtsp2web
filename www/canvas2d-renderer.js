@@ -7,21 +7,17 @@
 
 export class Canvas2DRenderer {
   ctx = null;
-  spinner = null;
 
   constructor(canvas) {
     this.ctx = canvas.getContext("2d");
   }
 
   draw(frame) {
-    this.spinner.stop();
     this.ctx.canvas.width = frame.displayWidth;
     this.ctx.canvas.height = frame.displayHeight;
     this.ctx.drawImage(frame, 0, 0, frame.displayWidth, frame.displayHeight);
     frame.close();
   }
-
-
 
   drawText(text) {
     this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
