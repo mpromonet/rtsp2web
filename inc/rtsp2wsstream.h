@@ -29,7 +29,7 @@ class Rtsp2WsStream : public WebsocketHandler
             m_cb(httpServer, wsurl),
             m_rtspClient(m_env, &m_cb, rtspurl.c_str(), 10, rtptransport, verbose),
             m_thread(std::thread([this, wsurl]() {
-                pthread_setname_np(pthread_self(), wsurl.c_str());
+                pthread_setname_np(m_thread.native_handle(), wsurl.c_str());
                 m_env.mainloop();	
             })) {
                 httpServer.addWebSocket(wsurl, this);
@@ -49,14 +49,14 @@ class Rtsp2WsStream : public WebsocketHandler
         }
 
     private:
-        bool handleConnection(CivetServer *server, const struct mg_connection *conn) override {
+        virtual bool handleConnection(CivetServer *server, const struct mg_connection *conn) override {
             if (this->getNbConnections() == 0) {
                 m_rtspClient.start();
             }
             return WebsocketHandler::handleConnection(server, conn);
         }
 
-        void  handleClose(CivetServer *server, const struct mg_connection *conn) override {
+        virtual void  handleClose(CivetServer *server, const struct mg_connection *conn) override {
             WebsocketHandler::handleClose(server, conn);
             if (this->getNbConnections() == 0) {
                 m_rtspClient.stop();
