@@ -38,7 +38,11 @@
                 worker.postMessage({ canvas: offscreenCanvas, url: stream }, [offscreenCanvas]); 
                 worker.onmessage = function (e) {
                     if (e.data.type === "loaded") {
-                        spinner.classList.remove("loading");
+                        if (e.data.loaded) {
+                            spinner.classList.remove("loading");
+                        } else {
+                            spinner.classList.add("loading");
+                        }
                     }
                 }
 

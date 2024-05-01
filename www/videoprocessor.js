@@ -58,7 +58,7 @@ export class VideoProcessor {
                 this.decoder.configure(config);
             } else {
                 this.renderer.drawText(`Codec ${codec} not supported`);
-                this?.onloadedcallback(false);
+                this._changeState(false);
                 return Promise.reject(`${codec} is not supported`);
             }
         }
