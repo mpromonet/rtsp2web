@@ -13,10 +13,12 @@ export class Canvas2DRenderer {
   }
 
   draw(frame) {
-    this.ctx.canvas.width = frame.displayWidth;
-    this.ctx.canvas.height = frame.displayHeight;
-    this.ctx.drawImage(frame, 0, 0, frame.displayWidth, frame.displayHeight);
-    frame.close();
+    requestAnimationFrame(() => {
+      this.ctx.canvas.width = frame.displayWidth;
+      this.ctx.canvas.height = frame.displayHeight;
+      this.ctx.drawImage(frame, 0, 0, frame.displayWidth, frame.displayHeight);
+      frame.close();
+    });
   }
 
   drawText(text) {

@@ -139,10 +139,12 @@ export class WebGPURenderer {
   async draw(frame) {
     await this.started;
 
-    const commandEncoder = this._createCommandEncoder(frame);
-    this.device.queue.submit([commandEncoder.finish()]);
-
-    frame?.close();
+    requestAnimationFrame(() => {
+      const commandEncoder = this._createCommandEncoder(frame);
+      this.device.queue.submit([commandEncoder.finish()]);
+  
+      frame?.close();
+    });    
   }
 
   _createTextCanvas(text) {
