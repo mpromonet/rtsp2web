@@ -29,7 +29,9 @@ class Rtsp2WsStream : public WebsocketHandler
             m_cb(httpServer, wsurl),
             m_rtspClient(m_env, &m_cb, rtspurl.c_str(), 10, rtptransport, verbose),
             m_thread(std::thread([this, wsurl]() {
+#ifndef _WIN32
                 pthread_setname_np(m_thread.native_handle(), wsurl.c_str());
+#endif                
                 m_env.mainloop();	
             })) {
                 httpServer.addWebSocket(wsurl, this);
