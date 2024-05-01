@@ -35,7 +35,7 @@ int logger(const struct mg_connection *conn, const char *message)
 class Rtsp2Ws
 {
     public:
-        Rtsp2Ws(const Json::Value & config, const std::vector<std::string>& options, int rtptransport, int verbose)
+        Rtsp2Ws(const Json::Value & config, const std::vector<std::string>& options, const std::string & rtptransport, int verbose)
             : m_httpServer(this->getHttpFunc(), m_wsfunc, options, verbose ? logger : NULL) {
                 Json::Value urls(config["urls"]);
                 for (auto & url : urls.getMemberNames()) {
@@ -43,7 +43,7 @@ class Rtsp2Ws
                 }
         }
 
-        void addStream(const std::string & wsurl, const std::string & rtspurl, int rtptransport, int verbose) {
+        void addStream(const std::string & wsurl, const std::string & rtspurl, const std::string & rtptransport, int verbose) {
             m_streams[wsurl] = new Rtsp2WsStream(m_httpServer, wsurl, rtspurl, rtptransport, verbose);
         }
 

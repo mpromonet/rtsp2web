@@ -18,16 +18,23 @@
 #include "rtspcallback.h"
 #include "WebsocketHandler.h"
 
+std::map<std::string,std::string> getopts(int timeout, const std::string & rtptransport) {
+    std::map<std::string,std::string> opts;
+    opts["timeout"] = std::to_string(timeout);
+    opts["rtptransport"] = rtptransport;
+    return opts;
+}
+
 class Rtsp2WsStream : public WebsocketHandler
 {
     public:
-        Rtsp2WsStream(HttpServerRequestHandler &httpServer, const std::string & wsurl, const std::string & rtspurl, int rtptransport, int verbose) :
+        Rtsp2WsStream(HttpServerRequestHandler &httpServer, const std::string & wsurl, const std::string & rtspurl, const std::string & rtptransport, int verbose) :
             WebsocketHandler(httpServer.getCallbacks()),
             m_httpServer(httpServer),
             m_wsurl(wsurl),
             m_env(),
             m_cb(httpServer, wsurl),
-            m_rtspClient(m_env, &m_cb, rtspurl.c_str(), 10, rtptransport, verbose),
+            m_rtspClient(m_env, &m_cb, rtspurl.c_str(), getopts(10, rtptransport), verbose),
             m_thread(std::thread([this, wsurl]() {
 #ifndef _WIN32
                 pthread_setname_np(m_thread.native_handle(), wsurl.c_str());
