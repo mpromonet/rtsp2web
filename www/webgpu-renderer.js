@@ -161,7 +161,7 @@ export class WebGPURenderer {
   async drawText(text) {
     const canvas = this._createTextCanvas(text);
     const bitmap = await createImageBitmap(canvas);
-    const frame = new VideoFrame(bitmap, { timestamp: performance.now() });
+    const frame = new VideoFrame(bitmap, { timestamp: performance.now() + performance.timeOrigin });
     return this.draw(frame);
   }
 

@@ -6,6 +6,7 @@
 ** -------------------------------------------------------------------------*/
 
 @import "nav.css";
+@import "spinner.css";
 
 html, body {
   height: 100%;
@@ -23,6 +24,12 @@ header {
   height: 100%;
   flex: auto;
   overflow-y: auto;
+}
+
+.videoContent {
+  position: relative;
+  height: 100%;
+  display: block;
 }
 
 footer {

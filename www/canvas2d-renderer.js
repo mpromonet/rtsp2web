@@ -24,10 +24,12 @@ export class Canvas2DRenderer {
     this.ctx.font = "16px Arial";
     this.ctx.textAlign = 'center'; 
     this.ctx.textBaseline = 'middle';
+    this.ctx.fillStyle = 'black';        
     this.ctx.fillText(text, this.ctx.canvas.width/2, this.ctx.canvas.height/2);    
   }
 
   clear() {
-    this.ctx.clearRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
+    this.ctx.fillStyle = 'white';
+    this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);    
   }
 };
