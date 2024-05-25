@@ -27,7 +27,7 @@ jobs:
       run: | 
           rm -f *.tar.gz
           cpack
-          echo "artifactPath=$(ls *.tar.gz)" >> $GITHUB_ENV
+          echo "artifactPath=$(ls *.tar.gz | grep -v live555)" >> $GITHUB_ENV
 
     - uses: actions/upload-artifact@v4
       with:
