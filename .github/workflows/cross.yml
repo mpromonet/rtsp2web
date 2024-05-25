@@ -1,4 +1,4 @@
-name: C/C++ CI linux cross compilation arm64/armhf/mips
+name: C/C++ CI linux cross compilation
 
 on: [push]
 
@@ -54,7 +54,7 @@ jobs:
 
     - name: build
       run: |
-          cmake -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }} -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.system }} -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_C_COMPILER=${{ matrix.crosscompiler }}-gcc -DCMAKE_CXX_COMPILER=${{ matrix.crosscompiler }}-g++ -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY -DCMAKE_FIND_ROOT_PATH=/usr/aarch64-linux-gnu .
+          cmake -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }} -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.system }} -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_C_COMPILER=${{ matrix.crosscompiler }}-gcc -DCMAKE_CXX_COMPILER=${{ matrix.crosscompiler }}-g++ -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY -DCMAKE_FIND_ROOT_PATH=/usr/aarch64-linux-gnu -DWITH_SSL=OFF .
           make
 
     - name: cpack 
