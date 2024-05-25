@@ -24,9 +24,9 @@ Usage
     -p, --path arg        Server root path (default: html)
     -c, --sslkeycert arg  Path to private key and certificate for HTTPS (default: "")
     -C, --config arg      Config
-    -M                    RTP over Multicast
-    -U                    RTP over Unicast
-    -H                    RTP over HTTP
+    -r, --rtptransport arg  RTP transport(udp,tcp,multicast,http) (default:
+                          tcp)
+
 
 Using Docker image
 ===============
