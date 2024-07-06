@@ -47,10 +47,10 @@ int main(int argc, char* argv[])
 		("h,help"        , "Print usage")
 		("v,verbose"     , "Verbose"                                      , cxxopts::value<int>()->default_value("0"))
 
-		("P,port"        , "Listening port"                               , cxxopts::value<std::string>()->default_value("8080")) 
+		("P,port"        , "Listening port"                               , cxxopts::value<std::string>()->default_value("8080s")) 
 		("N,thread"      , "Server number threads"                        , cxxopts::value<std::string>()->default_value(""))
 		("p,path"        , "Server root path"                             , cxxopts::value<std::string>()->default_value("www"))
-		("c,sslkeycert"  , "Path to private key and certificate for HTTPS", cxxopts::value<std::string>()->default_value(""))
+		("c,sslkeycert"  , "Path to private key and certificate for HTTPS", cxxopts::value<std::string>()->default_value("keycert.pem"))
 
 		("C,config"      , "Config"                                       , cxxopts::value<std::string>() ) 
 

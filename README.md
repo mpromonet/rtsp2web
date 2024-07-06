@@ -22,7 +22,7 @@ Usage
     -P, --port arg        Listening port (default: 8080)
     -N, --thread arg      Server number threads (default: "")
     -p, --path arg        Server root path (default: html)
-    -c, --sslkeycert arg  Path to private key and certificate for HTTPS (default: "")
+    -c, --sslkeycert arg  Path to private key and certificate for HTTPS (default: "keycert.pem")
     -C, --config arg      Config
     -r, --rtptransport arg  RTP transport(udp,tcp,multicast,http) (default:
                           tcp)
@@ -43,5 +43,5 @@ The container entry point is the application, then you can :
 * run the container specifying parameters :
 
         docker run -p 8080:8080 ghcr.io/mpromonet/rtsp2web rtsp://37.157.51.30/axis-media/media.amp rtsp://71.83.5.156/axis-media/media.amp rtsp://86.44.41.160/axis-media/media.amp 
-        docker run -p 8080:8080 -v $PWD/keycert.pem:/tmp/keycert.pem ghcr.io/mpromonet/rtsp2web -P 8080s -c /tmp/keycert.pem rtsp://37.157.51.30/axis-media/media.amp rtsp://71.83.5.156/axis-media/media.amp
+        docker run -p 8080:8080 -v $PWD/keycert.pem:/tmp/keycert.pem ghcr.io/mpromonet/rtsp2web -c /tmp/keycert.pem rtsp://37.157.51.30/axis-media/media.amp rtsp://71.83.5.156/axis-media/media.amp
 
