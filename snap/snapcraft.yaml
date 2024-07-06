@@ -25,7 +25,7 @@
 
   apps:
     rtsp2ws:
-      command: usr/local/bin/rtsp2ws -p $SNAP/usr/local/share/rtsp2ws/www -C $SNAP_USER_DATA/config.json
+      command: usr/local/bin/rtsp2ws -p $SNAP/usr/local/share/rtsp2ws/www -C $SNAP_USER_DATA/config.json -c $SNAP/usr/local/share/rtsp2ws/keycert.pem
       daemon: simple   
       plugs: 
       - network-bind
