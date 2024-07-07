@@ -42,20 +42,19 @@ jobs:
           system: riscv64
           crosscompiler: riscv64-linux-gnu
           
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v4
 
     - name: pkg
       run: | 
-        sudo dpkg --add-architecture ${{ matrix.system }}
         sudo apt-get update 
-        sudo apt-get install -y --no-install-recommends ca-certificates xz-utils cmake make pkg-config git g++-${{ matrix.crosscompiler }} libssl-dev:${{ matrix.system }}
+        sudo apt-get install -y --no-install-recommends ca-certificates xz-utils cmake make pkg-config git g++-${{ matrix.crosscompiler }}
 
     - name: build
       run: |
-          cmake -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }} -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.system }} -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_C_COMPILER=${{ matrix.crosscompiler }}-gcc -DCMAKE_CXX_COMPILER=${{ matrix.crosscompiler }}-g++ -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY -DCMAKE_FIND_ROOT_PATH=/usr/aarch64-linux-gnu .
+          cmake -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }} -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.system }} -DCMAKE_SYSTEM_NAME=Linux -DCMAKE_C_COMPILER=${{ matrix.crosscompiler }}-gcc -DCMAKE_CXX_COMPILER=${{ matrix.crosscompiler }}-g++ -DCMAKE_FIND_ROOT_PATH_MODE_PROGRAM=NEVER -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY -DCMAKE_FIND_ROOT_PATH_MODE_PACKAGE=ONLY -DCMAKE_FIND_ROOT_PATH=/usr/aarch64-linux-gnu -DWITH_SSL=OFF .
           make
 
     - name: cpack 
