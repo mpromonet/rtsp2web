@@ -95,7 +95,7 @@ export class VideoProcessor {
         return new VideoDecoder({
             output: (frame) => {
                 if (this.decoder.decodeQueueSize > 10) {
-                    console.log(`Discarding frame ${frame.timestamp} ${this.decoder.decodeQueueSize}`);
+                    console.debug(`Discarding frame ${frame.timestamp} ${this.decoder.decodeQueueSize}`);
                     frame.close();
                     return;
                 }    
