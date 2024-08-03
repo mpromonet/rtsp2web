@@ -18,6 +18,11 @@ class VideoWorkerWsElement extends HTMLElement {
                     <div id="spinner" class="loading"></div>
                   </div>`;      
                   
+    }
+  
+    connectedCallback() {
+        console.log("connectedCallback");
+
         const canvas = document.createElement("canvas");
         const offscreenCanvas = canvas.transferControlToOffscreen();
         this.worker = new Worker('video-ws/worker.js',  { type: "module" });
@@ -31,15 +36,12 @@ class VideoWorkerWsElement extends HTMLElement {
                 }
             }
         }
-        this.stream = canvas.captureStream();
-    }
-  
-    connectedCallback() {
-        console.log("connectedCallback");
-
+        if (this.getAttribute("url")) {
+            this.worker.postMessage({ url: this.getAttribute("url") });
+        }
 
         const video = this.shadowDOM.getElementById("video");
-        video.srcObject = this.stream;
+        video.srcObject = canvas.captureStream();
         video.play();
     }
   
@@ -54,7 +56,9 @@ class VideoWorkerWsElement extends HTMLElement {
         console.log(`Attribute ${name} has changed.`);
         if (name === "url" && oldValue !== newValue) {
             this.shadowDOM.getElementById("spinner").classList.add("loading");
-            this.worker.postMessage({ url: newValue });
+            if (this.worker) {
+                this.worker.postMessage({ url: newValue });
+            }
         }
     }
   }
