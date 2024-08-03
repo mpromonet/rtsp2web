@@ -3,15 +3,14 @@
     <title>RTSP2Web</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" type="text/css" href="style.css">
-    <link rel="stylesheet" type="text/css" href="video-ws/video-ws.css">
+    <script type="module" src="video-ws/video-worker-ws.js"></script>
 </head>
 <body>
     <header>
         <nav id="menu"></nav>
     </header>    
-    <div class="videoContent">
-        <video id="video" muted playsinline controls preload="none"></video>
-        <div id="spinner" class="loading"></div>
+    <div id="content">
+        <video-worker-ws id="videows"></video-worker-ws>
     </div>
     <footer>
             <a href="https://github.com/mpromonet/rtsp2web">rtsp2web</a>
@@ -25,27 +24,7 @@
     function selectStream(stream) {
         for (const opt of menu.getElementsByTagName('a')) {
             if (opt.url === stream) {
-                spinner.classList.add("loading");
-
-                const canvas = document.createElement("canvas");
-                video.srcObject = canvas.captureStream();
-                video.play();
-                const offscreenCanvas = canvas.transferControlToOffscreen();
-                if (worker) {
-                    worker.terminate();
-                }                
-                worker = new Worker('video-ws/worker.js',  { type: "module", name: stream });
-                worker.postMessage({ canvas: offscreenCanvas, url: stream }, [offscreenCanvas]); 
-                worker.onmessage = function (e) {
-                    if (e.data.type === "loaded") {
-                        if (e.data.loaded) {
-                            spinner.classList.remove("loading");
-                        } else {
-                            spinner.classList.add("loading");
-                        }
-                    }
-                }
-
+                videows.setAttribute("url", stream);
                 opt.className = "active";
             } else {
 		        opt.className = "";

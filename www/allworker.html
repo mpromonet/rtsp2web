@@ -4,7 +4,7 @@
         <title>RTSP2Web All Workers</title>
         <link rel="icon" type="image/png" href="favicon.png">
         <link rel="stylesheet" type="text/css" href="style.css">
-        <link rel="stylesheet" type="text/css" href="video-ws/video-ws.css">        
+        <script type="module" src="video-ws/video-worker-ws.js"></script>       
         <style>
             #content {
                 display: flex;
@@ -12,7 +12,7 @@
                 justify-content: space-evenly;
                 align-items: center;
             }
-            .videoWrapper {
+            video-worker-ws {
                 position: relative;
                 height: 15rem;
                 width: auto;
@@ -38,41 +38,15 @@
         .then(r => {
             const streamList = Object.keys(r);
             streamList.forEach(stream => {
-                const div = document.createElement("div");
-                div.className = "videoWrapper";
-
-                const video = document.createElement("video");
-                video.title = stream.substring(1);
-                video.muted = true;
-                video.playsinline = true;
-                video.controls = true;
-                video.preload = "none";
-                video.onclick = (e) => {
+                const streamElt = document.createElement("video-worker-ws");
+                streamElt.id = stream.substring(1);
+                streamElt.setAttribute("url", stream);
+                streamElt.title = stream.substring(1);
+                streamElt.onclick = (e) => {
                     e.preventDefault();
                     window.open("/video.html?" + stream, '_blank', 'noopener, noreferrer'); 
                 }
-                div.appendChild(video);
-                const spinner = document.createElement("div");
-                spinner.className = "loading";
-                div.appendChild(spinner);
-                content.appendChild(div);
-
-                const canvas = document.createElement("canvas");
-                video.srcObject = canvas.captureStream();
-                video.play();
-                const offscreenCanvas = canvas.transferControlToOffscreen();
-                
-                const worker = new Worker('video-ws/worker.js',  { type: "module", name: stream });        
-                worker.postMessage({ canvas: offscreenCanvas, url: stream }, [offscreenCanvas]);
-                worker.onmessage = function (e) {
-                    if (e.data.type === "loaded") {
-                        if (e.data.loaded) {
-                            spinner.classList.remove("loading");
-                        } else {
-                            spinner.classList.add("loading");
-                        }
-                    }
-                }
+                content.appendChild(streamElt);
             });
         });
     </script>        
