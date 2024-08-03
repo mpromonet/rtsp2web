@@ -4,7 +4,7 @@
         <title>RTSP2Web All Workers</title>
         <link rel="icon" type="image/png" href="favicon.png">
         <link rel="stylesheet" type="text/css" href="style.css">
-        <link rel="stylesheet" type="text/css" href="video-ws.css">        
+        <link rel="stylesheet" type="text/css" href="video-ws/video-ws.css">        
         <style>
             #content {
                 display: flex;
@@ -62,7 +62,7 @@
                 video.play();
                 const offscreenCanvas = canvas.transferControlToOffscreen();
                 
-                const worker = new Worker('worker.js',  { type: "module", name: stream });        
+                const worker = new Worker('video-ws/worker.js',  { type: "module", name: stream });        
                 worker.postMessage({ canvas: offscreenCanvas, url: stream }, [offscreenCanvas]);
                 worker.onmessage = function (e) {
                     if (e.data.type === "loaded") {

@@ -5,31 +5,18 @@
 **
 ** -------------------------------------------------------------------------*/
 
-@import "nav.css";
+@import "spinner.css";
 
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
+video {
+    width: auto;
+    height: 100%;
+    display: block;
+    margin: 0 auto;
 }
 
-header {
-  flex: 1;
+.videoContent {
+    position: relative;
+    height: 100%;
+    display: block;
 }
 
-#content {
-  height: 100%;
-  flex: auto;
-  overflow-y: auto;
-}
-
-footer {
-  text-align: center;
-  flex: 1;
-}
-
-footer > * {
-  display: inline;
-}
