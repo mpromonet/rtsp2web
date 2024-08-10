@@ -7,3 +7,6 @@
 [submodule "cxxopts"]
 	path = cxxopts
 	url = https://github.com/jarro2783/cxxopts
+[submodule "www/video-ws"]
+	path = www/video-ws
+	url = https://github.com/mpromonet/video-ws.git
