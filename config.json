@@ -25,6 +25,10 @@
         "BigSky": {"video":"rtsp://76.75.8.120/axis-media/media.amp", "position":"45.284650,-111.368290"},
         "Orlando": {"video":"rtsp://97.68.104.34/axis-media/media.amp", "position":"28.538340,-81.379240"},
         
-        "Ventspils": {"video":"rtsp://85.158.74.20/axis-media/media.amp", "position":"57.389440,21.560560"}
+        "Ventspils": {"video":"rtsp://85.158.74.20/axis-media/media.amp", "position":"57.389440,21.560560"},
+        "Ceneviere": {"video":"rtsp://80.11.95.43/axis-media/media.amp"},
+        "Torino": {"video":"rtsp://194.116.11.176/axis-media/media.amp", "position":"45.070490,7.686820"}
+        
+        
     }
 }

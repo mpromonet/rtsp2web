@@ -79,6 +79,9 @@ class RTSPCallback : public RTSPConnection::Callback
                 } else if (strcmp(codec, "OPUS") == 0) {
                     m_sessions[id] = SessionParams(media, codec, rtpfrequency, channels);
                     ret = true;
+                } else if (strcmp(codec, "PCMU") == 0) {
+                    m_sessions[id] = SessionParams(media, codec, rtpfrequency, channels);
+                    ret = true;
                 } else {
                     std::cout << codec << " not supported" << std::endl;
                 }
@@ -102,6 +105,8 @@ class RTSPCallback : public RTSPConnection::Callback
                 this->onDefaultData(id, "mp3", buffer, size, presentationTime);
             } else if (codec == "OPUS") {
                 this->onDefaultData(id, "opus", buffer, size, presentationTime);
+            } else if (codec == "PCMU") {
+                this->onDefaultData(id, "ulaw", buffer, size, presentationTime);
             }
             return true;
         }
