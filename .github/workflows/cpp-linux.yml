@@ -4,6 +4,11 @@ on: [push]
 
 jobs:
   build:
+    permissions:
+      id-token: write
+      contents: read
+      attestations: write
+      
     strategy:
       matrix:
         buildtype: [Debug, Release]
