@@ -23,6 +23,11 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }}  .
           make
 
+    - name: Attest
+      uses: actions/attest-build-provenance@v1
+      with:
+        subject-path: '${{ github.workspace }}/rtsp2ws'
+        
     - name: cpack 
       run: | 
           rm -f *.tar.gz
