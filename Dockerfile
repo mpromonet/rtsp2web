@@ -1,4 +1,4 @@
-ARG IMAGE=ubuntu:24.04
+ARG IMAGE=debian
 FROM $IMAGE as builder
 
 WORKDIR /rtsp2ws	
