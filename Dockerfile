@@ -1,5 +1,8 @@
 ARG IMAGE=ubuntu:24.04
 FROM $IMAGE as builder
+LABEL maintainer=michel.promonet@free.fr
+LABEL org.opencontainers.image.description rtsp to websocket gateway
+
 WORKDIR /rtsp2ws	
 COPY . .
 
