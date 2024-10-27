@@ -1,4 +1,4 @@
-ARG IMAGE=debian
+ARG IMAGE=debian:trixie
 FROM $IMAGE as builder
 
 WORKDIR /rtsp2ws	
