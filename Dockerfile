@@ -1,5 +1,5 @@
-ARG IMAGE=ubuntu:24.04
-FROM $IMAGE as builder
+ARG IMAGE=debian:trixie
+FROM $IMAGE AS builder
 
 WORKDIR /rtsp2ws	
 COPY . .
@@ -20,4 +20,4 @@ RUN apt-get update \
 
 WORKDIR /usr/local/share/rtsp2ws
 ENTRYPOINT [ "/usr/local/bin/rtsp2ws"]
-CMD []
+CMD ["-C", "config.json", "-c", "keycert.pem]
