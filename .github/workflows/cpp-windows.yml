@@ -12,8 +12,9 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+    - run: git fetch --prune --unshallow --tags
+
     - uses: lukka/get-cmake@latest      
-    
 
     - name: build
       shell: cmd
