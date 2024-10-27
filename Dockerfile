@@ -1,5 +1,5 @@
 ARG IMAGE=debian:trixie
-FROM $IMAGE as builder
+FROM $IMAGE AS builder
 
 WORKDIR /rtsp2ws	
 COPY . .
