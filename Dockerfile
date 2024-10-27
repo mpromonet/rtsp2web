@@ -20,4 +20,4 @@ RUN apt-get update \
 
 WORKDIR /usr/local/share/rtsp2ws
 ENTRYPOINT [ "/usr/local/bin/rtsp2ws"]
-CMD []
+CMD ["-C", "config.json", "-c", "keycert.pem]
