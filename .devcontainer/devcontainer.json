@@ -1,0 +1,19 @@
+{
+	"image": "ghcr.io/mpromonet/rtsp2web:master-dev",
+	"runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined", "--privileged"],
+		
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-vscode.cpptools"
+			]
+		}
+	},
+	"mounts": [
+		"source=profile,target=/home/dev,type=volume",
+		"target=/home/dev/.vscode-server,type=volume"
+	],
+	"workspaceFolder": "/rtsp2ws",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/rtsp2ws,type=bind",  
+	"forwardPorts": [8080]
+}
