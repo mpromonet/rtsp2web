@@ -2,6 +2,10 @@
 [![GithubCI](https://github.com/mpromonet/rtsp2ws/workflows/C/C++%20CI%20linux/badge.svg)](https://github.com/mpromonet/rtsp2ws/actions)
 [![GithubCI](https://github.com/mpromonet/rtsp2ws/workflows/C/C++%20CI%20windows/badge.svg)](https://github.com/mpromonet/rtsp2ws/actions)
 
+
+[![Release](https://img.shields.io/github/release/mpromonet/rtsp2ws.svg)](https://github.com/mpromonet/rtsp2ws/releases/latest)
+[![Download](https://img.shields.io/github/downloads/mpromonet/rtsp2ws/total.svg)](https://github.com/mpromonet/rtsp2ws/releases/latest)
+
 # rtsp2web
 
 This is a simple application that connect to RTSP streams, send compressed data over websocket and then decode on browser side using [webcodec](https://github.com/w3c/webcodecs)
