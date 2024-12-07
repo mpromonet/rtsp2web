@@ -45,6 +45,7 @@ int main(int argc, char* argv[])
 	options.allow_unrecognised_options();
 	options.add_options()
 		("h,help"        , "Print usage")
+		("V,version"     , "Print version and exit")
 		("v,verbose"     , "Verbose"                                      , cxxopts::value<int>()->default_value("0"))
 
 		("P,port"        , "Listening port"                               , cxxopts::value<std::string>()->default_value("8080s")) 
@@ -61,6 +62,12 @@ int main(int argc, char* argv[])
     if (result.count("help"))
     {
       std::cout << options.help() << std::endl;
+      exit(0);
+    }
+
+    std::cout << "Version: " << VERSION << std::endl;
+    if (result.count("version"))
+    {
       exit(0);
     }
 

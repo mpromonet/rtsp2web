@@ -1,6 +1,6 @@
 ARG IMAGE=debian:trixie
 FROM $IMAGE AS builder
-LABEL maintainer=michel.promonet@free.fr
+LABEL maintainer="michel.promonet@free.fr"
 ARG USERNAME=dev
 ARG USERID=10000
 
@@ -17,15 +17,19 @@ RUN apt-get update \
 USER $USERNAME
 
 FROM $IMAGE
-LABEL maintainer michel.promonet@free.fr
-LABEL org.opencontainers.image.description rtsp to websocket gateway
+LABEL maintainer="michel.promonet@free.fr"
+LABEL org.opencontainers.image.description="rtsp to websocket gateway"
 
 COPY --from=builder /usr/local/bin/rtsp2ws /usr/local/bin/
 COPY --from=builder /usr/local/share/rtsp2ws/ /usr/local/share/rtsp2ws/
 
 RUN apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates libssl-dev && rm -rf /var/lib/apt/lists/
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates libssl-dev \
+    && rm -rf /var/lib/apt/lists/ \
+    && useradd -m user
 
 WORKDIR /usr/local/share/rtsp2ws
+USER user
+
 ENTRYPOINT [ "/usr/local/bin/rtsp2ws"]
 CMD ["-C", "config.json", "-c", "keycert.pem"]
