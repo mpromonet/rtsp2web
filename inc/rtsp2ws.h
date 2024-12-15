@@ -17,6 +17,7 @@
 #include <map>
 #include <thread>
 #include <iostream>
+#include <memory>
 
 #include "HttpServerRequestHandler.h"
 #include "rtsp2wsstream.h"
@@ -43,9 +44,21 @@ class Rtsp2Ws
                 }
         }
 
-        void addStream(const std::string & wsurl, const std::string & rtspurl, const std::string & rtptransport, int verbose) {
-            m_streams[wsurl] = new Rtsp2WsStream(m_httpServer, wsurl, rtspurl, rtptransport, verbose);
+        Rtsp2Ws(const Rtsp2Ws&) = delete;
+        Rtsp2Ws& operator=(const Rtsp2Ws&) = delete;
+        Rtsp2Ws(Rtsp2Ws&&) noexcept = default;
+        Rtsp2Ws& operator=(Rtsp2Ws&&) noexcept = default;
+        ~Rtsp2Ws() = default;
+
+        const void* getContext() { 
+            return m_httpServer.getContext(); 
         }
+
+    private:
+        void addStream(const std::string & wsurl, const std::string & rtspurl, const std::string & rtptransport, int verbose) {
+            m_streams[wsurl] = std::make_unique<Rtsp2WsStream>(m_httpServer, wsurl, rtspurl, rtptransport, verbose);
+        }
+
 
         std::map<std::string,HttpServerRequestHandler::httpFunction>& getHttpFunc() {
             if (m_httpfunc.empty()) {
@@ -70,19 +83,9 @@ class Rtsp2Ws
             return m_httpfunc;
         }
 
-        virtual ~Rtsp2Ws() {
-            for (auto & it : m_streams) {
-                delete it.second;
-            }
-        }
-
-        const void* getContext() { 
-            return m_httpServer.getContext(); 
-        }
-
     private:
         std::map<std::string,HttpServerRequestHandler::httpFunction>  m_httpfunc;
         std::map<std::string,HttpServerRequestHandler::wsFunction>    m_wsfunc;
         HttpServerRequestHandler                                      m_httpServer;
-        std::map<std::string,Rtsp2WsStream*>                          m_streams;
+        std::map<std::string, std::unique_ptr<Rtsp2WsStream>>         m_streams;
 };
