@@ -11,7 +11,7 @@
  */
 
 #pragma once
-#include <vector>
+
 #include <string>
 #include <thread>
 
@@ -58,14 +58,14 @@ class Rtsp2WsStream : public WebsocketHandler
         }
 
     private:
-        virtual bool handleConnection(CivetServer *server, const struct mg_connection *conn) override {
+        bool handleConnection(CivetServer *server, const struct mg_connection *conn) override {
             if (this->getNbConnections() == 0) {
                 m_rtspClient.start();
             }
             return WebsocketHandler::handleConnection(server, conn);
         }
 
-        virtual void  handleClose(CivetServer *server, const struct mg_connection *conn) override {
+        void  handleClose(CivetServer *server, const struct mg_connection *conn) override {
             WebsocketHandler::handleClose(server, conn);
             if (this->getNbConnections() == 0) {
                 m_rtspClient.stop();

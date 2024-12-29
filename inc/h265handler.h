@@ -16,12 +16,12 @@
 #include "h26xhandler.h"
 
 
-const int H265_SLICE=1;
-const int H265_VPS=32;
-const int H265_SPS=33;
-const int H265_PPS=34;
-const int H265_IDR_W_RADL=19;
-const int H265_IDR_N_LP=20;
+constexpr int H265_SLICE=1;
+constexpr int H265_VPS=32;
+constexpr int H265_SPS=33;
+constexpr int H265_PPS=34;
+constexpr int H265_IDR_W_RADL=19;
+constexpr int H265_IDR_N_LP=20;
 
 
 class H265Handler : public H26xHandler {

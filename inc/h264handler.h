@@ -15,10 +15,10 @@
 #include "h26xhandler.h"
 
 
-const int H264_SLICE=1;
-const int H264_IDR=5;
-const int H264_SPS=7;
-const int H264_PPS=8;
+constexpr int H264_SLICE=1;
+constexpr int H264_IDR=5;
+constexpr int H264_SPS=7;
+constexpr int H264_PPS=8;
 
 class H264Handler : public H26xHandler {
 public:

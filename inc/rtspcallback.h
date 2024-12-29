@@ -30,7 +30,7 @@ class RTSPCallback : public RTSPConnection::Callback
     public:
         RTSPCallback(HttpServerRequestHandler& httpServer, const std::string& uri): m_httpServer(httpServer), m_uri(uri)   {}
 
-        virtual bool    onNewSession(const char* id, const char* media, const char* codec, const char* sdp, unsigned int rtpfrequency, unsigned int channels) {
+        bool  onNewSession(const char* id, const char* media, const char* codec, const char* sdp, unsigned int rtpfrequency, unsigned int channels) override { 
             std::cout << id << " " << media << "/" <<  codec << " " << rtpfrequency << "/" << channels << std::endl;
 
             bool ret = false;
@@ -69,9 +69,10 @@ class RTSPCallback : public RTSPConnection::Callback
             return ret;
         }
         
-        virtual bool    onData(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) override {
-            if (m_handler.find(id) != m_handler.end()) {
-                std::tuple<Json::Value,std::string> data = m_handler[id]->onData(buffer, size, presentationTime);
+        bool    onData(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) override {
+            auto it = m_handler.find(id);
+            if (it != m_handler.end()) {
+                std::tuple<Json::Value,std::string> data = it->second->onData(buffer, size, presentationTime);
                 if (!std::get<1>(data).empty()) {
                     publish(std::get<0>(data), std::get<1>(data)); 
                 }
@@ -79,23 +80,23 @@ class RTSPCallback : public RTSPConnection::Callback
             return true;
         }
         
-        virtual void    onError(RTSPConnection& connection, const char* message) override {
+        void    onError(RTSPConnection& connection, const char* message) override {
             connection.start(10);
         }
         
-        virtual void    onConnectionTimeout(RTSPConnection& connection) override {
+        void    onConnectionTimeout(RTSPConnection& connection) override {
             connection.start();
         }
         
-        virtual void    onDataTimeout(RTSPConnection& connection)  override {
+        void    onDataTimeout(RTSPConnection& connection) override {
             connection.start();
         }	
 
-        virtual void    onCloseSession(const char* id) override {
+        void    onCloseSession(const char* id) override {
             m_handler.erase(id);
         }
 
-        Json::Value toJSON() {
+        Json::Value toJSON() const {
             Json::Value data;
             for (auto const& x : m_handler) {
                 data[x.first] = x.second->m_params.m_media + "/" + x.second->m_params.m_codec;
@@ -104,7 +105,7 @@ class RTSPCallback : public RTSPConnection::Callback
         }
 
     private:
-        void publish(const Json::Value & data, const std::string & buf) {
+        void publish(const Json::Value & data, const std::string & buf) const {
             m_httpServer.publishJSON(m_uri, data);
             m_httpServer.publishBin(m_uri, buf.c_str(), buf.size());
         }
