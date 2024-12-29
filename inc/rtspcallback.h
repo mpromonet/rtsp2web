@@ -123,6 +123,10 @@ class RTSPCallback : public RTSPConnection::Callback
             connection.start();
         }	
 
+        virtual void    onCloseSession(const char* id) {
+            m_sessions.erase(id);
+        }
+
         Json::Value toJSON() {
             Json::Value data;
             for (auto const& x : m_sessions) {
