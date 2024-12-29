@@ -12,13 +12,8 @@
 
 #pragma once
 
-#include <string>
-#include <iomanip>
 
-#include <json/json.h>
-
-#include "rtspconnectionclient.h"
-#include "codechandler.h"
+#include "h26xhandler.h"
 
 
 const int H265_SLICE=1;
@@ -29,9 +24,9 @@ const int H265_IDR_W_RADL=19;
 const int H265_IDR_N_LP=20;
 
 
-class H265Handler : public CodecHandler {
+class H265Handler : public H26xHandler {
 public:
-    H265Handler(const SessionParams& params) : CodecHandler(params) {}
+    H265Handler(const SessionParams& params) : H26xHandler(params) {}
 
     std::tuple<Json::Value,std::string> onData(unsigned char* buffer, ssize_t size, struct timeval presentationTime) override {
         std::string buf(buffer, buffer + size);
@@ -62,23 +57,22 @@ public:
     }
 
     bool onConfig(const char* sdp) override {
-        onH265SPropConfig("sprop-vps=", sdp);
-        onH265SPropConfig("sprop-sps=", sdp);
-        onH265SPropConfig("sprop-pps=", sdp);
-        return true;
-    }
-
-private:
-
-    bool onH265SPropConfig(const char* pattern, const char* sdp) {
-        const char* sprop = strstr(sdp, pattern);
-        if (sprop) {
-            std::string xps(extractProp(sprop + strlen(pattern)));
-            onCfg(xps);
+        std::string vps = extractPropConfig("sprop-vps=", sdp);
+        if (!vps.empty()) {
+            onCfg(vps);
+        }
+        std::string sps = extractPropConfig("sprop-sps=", sdp);
+        if (!sps.empty()) {
+            onCfg(sps);
+        }
+        std::string pps = extractPropConfig("sprop-pps=", sdp);
+        if (!pps.empty()) {
+            onCfg(pps);
         }
         return true;
     }
 
+private:
     std::string m_vps;
     std::string m_sps;
     std::string m_pps;

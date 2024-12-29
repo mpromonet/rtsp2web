@@ -18,7 +18,7 @@
 
 #include "cxxopts.hpp"
 
-#include "rtsp2ws.h"
+#include "rtsp2wsserver.h"
 
 /* ---------------------------------------------------------------------------
 **  end condition
@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
 	}		
 
 	// api server
-	Rtsp2Ws server(config, opts, rtptransport, verbose);
+	Rtsp2WsServer server(config, opts, rtptransport, verbose);
 	if (server.getContext() == NULL)
 	{
 		std::cout << "Cannot listen on port:" << port << std::endl; 

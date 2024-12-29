@@ -12,14 +12,7 @@
 
 #pragma once
 
-#include <string>
-#include <iomanip>
-
-#include <json/json.h>
-
-
-#include "rtspconnectionclient.h"
-#include "codechandler.h"
+#include "h26xhandler.h"
 
 
 const int H264_SLICE=1;
@@ -27,9 +20,9 @@ const int H264_IDR=5;
 const int H264_SPS=7;
 const int H264_PPS=8;
 
-class H264Handler : public CodecHandler {
+class H264Handler : public H26xHandler {
 public:
-    H264Handler(const SessionParams& params) : CodecHandler(params) {}
+    H264Handler(const SessionParams& params) : H26xHandler(params) {}
     
     std::tuple<Json::Value,std::string> onData(unsigned char* buffer, ssize_t size, struct timeval presentationTime) override {
         std::string buf(buffer, buffer + size);
@@ -61,15 +54,11 @@ public:
     }
 
     bool onConfig(const char* sdp) override {
-        const char* pattern = "sprop-parameter-sets=";
-        const char* sprop = strstr(sdp, pattern);
-        if (sprop) {
-            std::string sdpstr(extractProp(sprop + strlen(pattern)));
-
-            std::string sps = sdpstr.substr(0, sdpstr.find_first_of(","));
+        std::string spspps = extractPropConfig("sprop-parameter-sets=", sdp);
+        if (!spspps.empty()) {
+            std::string sps = spspps.substr(0, spspps.find_first_of(","));
             onCfg(sps);
-
-            std::string pps = sdpstr.substr(sdpstr.find_first_of(",") + 1);
+            std::string pps = spspps.substr(spspps.find_first_of(",") + 1);
             onCfg(pps);
         }
         return true;

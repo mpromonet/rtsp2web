@@ -17,14 +17,10 @@
 
 #include <json/json.h>
 
-#include "Base64.hh"
-
 #include "session.h"
 
 class CodecHandler {
 public:
-    CodecHandler() = default;
-
     CodecHandler(const SessionParams& params) : m_params(params) {}
 
     virtual ~CodecHandler() = default;
@@ -44,6 +40,7 @@ public:
         return true; 
     }
 
+protected:
     std::string extractProp(const char* spropvalue) {
         std::string sdpstr(spropvalue);
         size_t pos = sdpstr.find_first_of(" ;\r\n");
@@ -53,15 +50,13 @@ public:
         return sdpstr;
     }    
 
-    void onCfg(const std::string& prop) {
-        unsigned int length = 0;
-        unsigned char * decoded = base64Decode(prop.c_str(), length);
-        if (decoded) {
-            std::string cfg;
-            cfg.insert(cfg.end(), H26X_marker, H26X_marker+sizeof(H26X_marker));
-            cfg.insert(cfg.end(), decoded, decoded+length);
-            onData((unsigned char*)cfg.c_str(), cfg.size(), timeval());
-            delete[]decoded;
+    std::string extractPropConfig(const char* pattern, const char* sdp) {
+        const char* sprop = strstr(sdp, pattern);
+        if (sprop) {
+            std::string value(extractProp(sprop + strlen(pattern)));
+            return value;
+        } else {
+            return "";
         }
     }
 
