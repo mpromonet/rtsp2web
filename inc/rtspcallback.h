@@ -71,8 +71,8 @@ class RTSPCallback : public RTSPConnection::Callback
         
         bool    onData(const char* id, unsigned char* buffer, ssize_t size, struct timeval presentationTime) override {
             auto it = m_handler.find(id);
-            if (it != m_handler.end()) {
-                std::tuple<Json::Value,std::string> data = it->second->onData(buffer, size, presentationTime);
+            if (m_handler.find(id) != m_handler.end()) {
+                std::tuple<Json::Value,std::string> data = m_handler[id]->onData(buffer, size, presentationTime);
                 if (!std::get<1>(data).empty()) {
                     publish(std::get<0>(data), std::get<1>(data)); 
                 }
@@ -88,7 +88,7 @@ class RTSPCallback : public RTSPConnection::Callback
             connection.start();
         }
         
-        void    onDataTimeout(RTSPConnection& connection) override {
+        void    onDataTimeout(RTSPConnection& connection)  override {
             connection.start();
         }	
 
@@ -98,8 +98,8 @@ class RTSPCallback : public RTSPConnection::Callback
 
         Json::Value toJSON() const {
             Json::Value data;
-            for (auto const& x : m_handler) {
-                data[x.first] = x.second->m_params.m_media + "/" + x.second->m_params.m_codec;
+            for (const auto& [key, value] : m_handler) {
+                data[key] = value->m_params.m_media + "/" + value->m_params.m_codec;
             }
             return data;
         }
