@@ -65,6 +65,9 @@
         "optional": "cpp",
         "regex": "cpp",
         "future": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "charconv": "cpp",
+        "format": "cpp",
+        "span": "cpp"
     }
 }

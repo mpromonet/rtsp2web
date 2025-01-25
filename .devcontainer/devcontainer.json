@@ -1,7 +1,7 @@
 {
-	"image": "ghcr.io/mpromonet/rtsp2web:master-dev",
-	"runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined", "--privileged"],
-		
+	"image": "ghcr.io/mpromonet/rtsp2web:${localEnv:GIT_BRANCH:master}-dev",
+	"runArgs": [ "--cap-add=SYS_PTRACE", "--security-opt", "seccomp=unconfined", "--privileged", "--net", "host"],
+	"initializeCommand": "echo GIT_BRANCH=$(git branch --show-current) > .devcontainer/.env",
 	"customizations": {
 		"vscode": {
 			"extensions": [
@@ -14,6 +14,7 @@
 		"target=/home/dev/.vscode-server,type=volume"
 	],
 	"workspaceFolder": "/rtsp2ws",
+	"remoteUser": "root",
 	"workspaceMount": "source=${localWorkspaceFolder},target=/rtsp2ws,type=bind",  
 	"forwardPorts": [8080]
 }

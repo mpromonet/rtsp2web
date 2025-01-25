@@ -8,3 +8,4 @@ dist/
 node_modules/
 rtsp2ws
 install_manifest.txt
+.devcontainer/.env
