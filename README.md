@@ -6,6 +6,8 @@
 [![Release](https://img.shields.io/github/release/mpromonet/rtsp2ws.svg)](https://github.com/mpromonet/rtsp2ws/releases/latest)
 [![Download](https://img.shields.io/github/downloads/mpromonet/rtsp2ws/total.svg)](https://github.com/mpromonet/rtsp2ws/releases/latest)
 
+*** Notice *** Live demo are stopped till I migrate to a european web hosting.
+
 # rtsp2web
 
 This is a simple application that connect to RTSP streams, send compressed data over websocket and then decode on browser side using [webcodec](https://github.com/w3c/webcodecs)
