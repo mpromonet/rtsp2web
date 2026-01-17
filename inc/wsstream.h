@@ -1,4 +1,3 @@
-
 /*
  * SPDX-License-Identifier: Unlicense
  *
@@ -13,9 +12,10 @@
 
 #pragma once
 
-#include <iostream>
-#include <iomanip>
-#include <map>
+#include <string>
+#include <thread>
+
+#include "WebsocketHandler.h"
 
 #include "rtspconnectionclient.h"
 #include "HttpServerRequestHandler.h"
@@ -24,11 +24,63 @@
 #include "h264handler.h"
 #include "h265handler.h"
 
+std::map<std::string,std::string> getopts(int timeout, const std::string & rtptransport) {
+    std::map<std::string,std::string> opts;
+    opts["timeout"] = std::to_string(timeout);
+    opts["rtptransport"] = rtptransport;
+    return opts;
+}
 
-class RTSPCallback : public RTSPConnection::Callback
+template <typename T>
+class WsStream : public WebsocketHandler, public T::Callback
 {
     public:
-        RTSPCallback(HttpServerRequestHandler& httpServer, const std::string& uri): m_httpServer(httpServer), m_uri(uri)   {}
+        WsStream(HttpServerRequestHandler &httpServer, const std::string & wsurl, const std::string & rtspurl, const std::string & rtptransport, int verbose) :
+            WebsocketHandler(httpServer.getCallbacks()),
+            m_httpServer(httpServer),
+            m_wsurl(wsurl),
+            m_env(),
+            m_rtspClient(m_env, this, rtspurl.c_str(), getopts(10, rtptransport), verbose),
+            m_thread(std::thread([this, wsurl]() {
+#ifndef _WIN32
+                pthread_setname_np(m_thread.native_handle(), wsurl.c_str());
+#endif                
+                m_env.mainloop();	
+            })) {
+                httpServer.addWebSocket(wsurl, this);
+        }
+
+        Json::Value toJSON() {
+            Json::Value json;
+            for (const auto& [key, value] : m_handler) {
+                json[key] = value->m_params.m_media + "/" + value->m_params.m_codec;
+            }            
+            json["connections"] = getConnections();
+            return json;
+        }
+
+        virtual ~WsStream() {
+            m_rtspClient.stop();
+            m_env.stop();
+            m_thread.join();
+            m_httpServer.removeWebSocket(m_wsurl);
+        }
+
+    private:
+        bool handleConnection(CivetServer *server, const struct mg_connection *conn) override {
+            if (this->getNbConnections() == 0) {
+                m_rtspClient.start();
+            }
+            return WebsocketHandler::handleConnection(server, conn);
+        }
+
+        void  handleClose(CivetServer *server, const struct mg_connection *conn) override {
+            WebsocketHandler::handleClose(server, conn);
+            if (this->getNbConnections() == 0) {
+                m_rtspClient.stop();
+            }
+        }
+
 
         bool  onNewSession(const char* id, const char* media, const char* codec, const char* sdp, unsigned int rtpfrequency, unsigned int channels) override { 
             std::cout << id << " " << media << "/" <<  codec << " " << rtpfrequency << "/" << channels << std::endl;
@@ -80,15 +132,15 @@ class RTSPCallback : public RTSPConnection::Callback
             return true;
         }
         
-        void    onError(RTSPConnection& connection, const char* message) override {
+        void    onError(T& connection, const char* message) override {
             connection.start(10);
         }
         
-        void    onConnectionTimeout(RTSPConnection& connection) override {
+        void    onConnectionTimeout(T& connection) override {
             connection.start();
         }
         
-        void    onDataTimeout(RTSPConnection& connection)  override {
+        void    onDataTimeout(T& connection)  override {
             connection.start();
         }	
 
@@ -96,22 +148,18 @@ class RTSPCallback : public RTSPConnection::Callback
             m_handler.erase(id);
         }
 
-        Json::Value toJSON() const {
-            Json::Value data;
-            for (const auto& [key, value] : m_handler) {
-                data[key] = value->m_params.m_media + "/" + value->m_params.m_codec;
-            }
-            return data;
-        }
-
     private:
         void publish(const Json::Value & data, const std::string & buf) const {
-            m_httpServer.publishJSON(m_uri, data);
-            m_httpServer.publishBin(m_uri, buf.c_str(), buf.size());
+            m_httpServer.publishJSON(m_wsurl, data);
+            m_httpServer.publishBin(m_wsurl, buf.c_str(), buf.size());
         }
 
     private:
-        HttpServerRequestHandler&                                m_httpServer;
-        std::string                                              m_uri;
-        std::map<std::string,std::unique_ptr<CodecHandler>>      m_handler;
+        HttpServerRequestHandler &                                    m_httpServer;
+        const std::string                                             m_wsurl;
+        Environment                                                   m_env;
+        T                                                             m_rtspClient;
+        std::thread                                                   m_thread;
+        std::map<std::string,std::unique_ptr<CodecHandler>>           m_handler;
+
 };

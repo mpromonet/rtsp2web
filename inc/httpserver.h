@@ -20,7 +20,7 @@
 #include <memory>
 
 #include "HttpServerRequestHandler.h"
-#include "rtsp2wsstream.h"
+#include "wsstream.h"
 
 inline int logger(const struct mg_connection *conn, const char *message) 
 {
@@ -56,7 +56,7 @@ class HttpServer
 
     private:
         void addStream(const std::string & wsurl, const std::string & rtspurl, const std::string & rtptransport, int verbose) {
-            m_streams[wsurl] = std::make_unique<Rtsp2WsStream>(m_httpServer, wsurl, rtspurl, rtptransport, verbose);
+            m_streams[wsurl] = std::make_unique<WsStream<RTSPConnection>>(m_httpServer, wsurl, rtspurl, rtptransport, verbose);
         }
 
 
@@ -84,8 +84,8 @@ class HttpServer
         }
 
     private:
-        std::map<std::string,HttpServerRequestHandler::httpFunction>  m_httpfunc;
-        std::map<std::string,HttpServerRequestHandler::wsFunction>    m_wsfunc;
-        HttpServerRequestHandler                                      m_httpServer;
-        std::map<std::string, std::unique_ptr<Rtsp2WsStream>>         m_streams;
+        std::map<std::string,HttpServerRequestHandler::httpFunction>      m_httpfunc;
+        std::map<std::string,HttpServerRequestHandler::wsFunction>        m_wsfunc;
+        HttpServerRequestHandler                                          m_httpServer;
+        std::map<std::string, std::unique_ptr<WsStream<RTSPConnection>>>  m_streams;
 };
