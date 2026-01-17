@@ -16,13 +16,13 @@
 #include <string>
 #include <map>
 #include <thread>
-#include <iostream>
+#include <cstdio>
 #include <memory>
 
 #include "HttpServerRequestHandler.h"
 #include "rtsp2wsstream.h"
 
-int logger(const struct mg_connection *conn, const char *message) 
+inline int logger(const struct mg_connection *conn, const char *message) 
 {
     const struct mg_request_info *req_info = mg_get_request_info(conn);
 
@@ -37,7 +37,7 @@ class Rtsp2WsServer
 {
     public:
         Rtsp2WsServer(const Json::Value & config, const std::vector<std::string>& options, const std::string & rtptransport, int verbose)
-            : m_httpServer(this->getHttpFunc(), m_wsfunc, options, verbose ? logger : NULL) {
+            : m_httpServer(this->getHttpFunc(), m_wsfunc, options, verbose ? logger : nullptr) {
                 Json::Value urls(config["urls"]);
                 for (auto & url : urls.getMemberNames()) {
                     this->addStream("/"+url, urls[url]["video"].asString(), rtptransport, verbose);
@@ -50,7 +50,7 @@ class Rtsp2WsServer
         Rtsp2WsServer& operator=(Rtsp2WsServer&&) noexcept = default;
         ~Rtsp2WsServer() = default;
 
-        const void* getContext() { 
+        const void* getContext() const { 
             return m_httpServer.getContext(); 
         }
 
@@ -74,7 +74,7 @@ class Rtsp2WsServer
                 };                
                 m_httpfunc["/api/help"]    = [this](const struct mg_request_info *, const Json::Value & ) -> Json::Value {
                         Json::Value answer(Json::arrayValue);
-                        for (auto it : m_httpfunc) {
+                    for (const auto & it : m_httpfunc) {
                                 answer.append(it.first);
                         }
                         return answer;
