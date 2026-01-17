@@ -33,10 +33,10 @@ inline int logger(const struct mg_connection *conn, const char *message)
 	return 0;
 }
 
-class Rtsp2WsServer
+class HttpServer
 {
     public:
-        Rtsp2WsServer(const Json::Value & config, const std::vector<std::string>& options, const std::string & rtptransport, int verbose)
+        HttpServer(const Json::Value & config, const std::vector<std::string>& options, const std::string & rtptransport, int verbose)
             : m_httpServer(this->getHttpFunc(), m_wsfunc, options, verbose ? logger : nullptr) {
                 Json::Value urls(config["urls"]);
                 for (auto & url : urls.getMemberNames()) {
@@ -44,11 +44,11 @@ class Rtsp2WsServer
                 }
         }
 
-        Rtsp2WsServer(const Rtsp2WsServer&) = delete;
-        Rtsp2WsServer& operator=(const Rtsp2WsServer&) = delete;
-        Rtsp2WsServer(Rtsp2WsServer&&) noexcept = default;
-        Rtsp2WsServer& operator=(Rtsp2WsServer&&) noexcept = default;
-        ~Rtsp2WsServer() = default;
+        HttpServer(const HttpServer&) = delete;
+        HttpServer& operator=(const HttpServer&) = delete;
+        HttpServer(HttpServer&&) noexcept = default;
+        HttpServer& operator=(HttpServer&&) noexcept = default;
+        ~HttpServer() = default;
 
         const void* getContext() const { 
             return m_httpServer.getContext(); 
