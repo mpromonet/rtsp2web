@@ -14,14 +14,12 @@ jobs:
       OPENSSL_ROOT_DIR: 'C:\Program Files\OpenSSL-Win64'
       
     steps:
-    - name: Locate OpenSSL 
+    - name: OpenSSL 
       shell: cmd
       run: | 
-        env
-        where openssl
-        where choco
         choco list
         choco install --no-progress -y openssl
+        where openssl
     
     - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow --tags
@@ -31,6 +29,7 @@ jobs:
     - name: build
       shell: cmd
       run: |
+          set "PATH=%OPENSSL_ROOT_DIR%\bin;%PATH%"
           set
           where ninja
           cmake -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }} -DCMAKE_MAKE_PROGRAM=ninja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang .
