@@ -22,8 +22,7 @@ jobs:
         where choco
         choco list
         dir "C:\Program Files\OpenSSL"
-        dir "C:\Program Files\OpenSSL-Win64\bin" 
-        dir C:\Windows\System32\libssl-*.dl
+        dir "C:\Program Files\OpenSSL\include"
     
     - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow --tags
