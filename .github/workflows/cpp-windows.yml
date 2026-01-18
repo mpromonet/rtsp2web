@@ -22,7 +22,7 @@ jobs:
       run: |
           set
           cmake -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }} .
-          cmake --build --config ${{ matrix.buildtype }} .
+          cmake --build . --config ${{ matrix.buildtype }}
 
     - name: cpack
       shell: bash
