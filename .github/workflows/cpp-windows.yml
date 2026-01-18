@@ -15,8 +15,13 @@ jobs:
     
     steps:
     - name: Locate OpenSSL 
+      shell: cmd
       run: | 
-        where openssl 
+        env
+        where openssl
+        where choco
+        choco list
+        dir "C:\Program Files\OpenSSL"
         dir "C:\Program Files\OpenSSL-Win64\bin" 
         dir C:\Windows\System32\libssl-*.dl
     
