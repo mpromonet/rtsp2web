@@ -9,10 +9,7 @@ jobs:
         buildtype: [Debug, Release]
 
     runs-on: windows-latest
-    
-    env:
-      OPENSSL_ROOT_DIR: 'C:\Program Files\OpenSSL'
-    
+        
     steps:
     - name: Locate OpenSSL 
       shell: cmd
@@ -21,8 +18,7 @@ jobs:
         where openssl
         where choco
         choco list
-        dir "C:\Program Files\OpenSSL"
-        dir "C:\Program Files\OpenSSL\include"
+        choco install --no-progress -y openssl
     
     - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow --tags
