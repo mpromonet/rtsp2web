@@ -9,7 +9,10 @@ jobs:
         buildtype: [Debug, Release]
 
     runs-on: windows-latest
-        
+
+    env:
+      OPENSSL_ROOT_DIR: 'C:\Program Files\OpenSSL-Win64'
+      
     steps:
     - name: Locate OpenSSL 
       shell: cmd
