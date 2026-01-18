@@ -28,7 +28,7 @@ jobs:
       shell: bash
       run: | 
           rm -f *.tar.gz
-          cpack
+          cpack -C ${{ matrix.buildtype }} 
           echo "artifactPath=$(ls *.tar.gz)" >> $GITHUB_ENV
 
     - uses: actions/upload-artifact@v4
