@@ -12,7 +12,7 @@ jobs:
     
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - run: git fetch --prune --unshallow --tags
 
     - uses: lukka/get-cmake@latest      
@@ -22,7 +22,7 @@ jobs:
       run: |
           set
           cmake -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }} .
-          cmake --build -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }} .
+          cmake --build .
 
     - name: cpack
       shell: bash
