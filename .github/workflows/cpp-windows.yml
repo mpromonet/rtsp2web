@@ -10,8 +10,6 @@ jobs:
 
     runs-on: windows-latest
     
-    env:
-      OPENSSL_ROOT_DIR: 'C:\Program Files\OpenSSL'
     
     steps:
     - uses: actions/checkout@v4
@@ -24,7 +22,7 @@ jobs:
       run: |
           set
           cmake -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }} .
-          cmake --build .
+          cmake --build -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }} .
 
     - name: cpack
       shell: bash
