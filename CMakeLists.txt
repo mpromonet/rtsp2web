@@ -3,6 +3,12 @@ project(rtsp2ws)
 
 set (CMAKE_CXX_STANDARD 17)
 
+if(NOT CMAKE_BUILD_TYPE)
+    set (CMAKE_BUILD_TYPE "Release")
+endif()
+MESSAGE("CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
+
+
 find_package(Git)
 if(GIT_FOUND)
     EXECUTE_PROCESS(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive)
