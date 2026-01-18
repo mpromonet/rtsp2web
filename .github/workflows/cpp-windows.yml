@@ -10,6 +10,9 @@ jobs:
 
     runs-on: windows-latest
     
+    env:
+      OPENSSL_ROOT_DIR: 'C:\Program Files\OpenSSL'
+    
     steps:
     - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow --tags
@@ -21,7 +24,7 @@ jobs:
       run: |
           set
           where ninja
-          cmake -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }} -DCMAKE_MAKE_PROGRAM=ninja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DOPENSSL_ROOT_DIR="%ProgramFiles%\OpenSSL" .
+          cmake -G Ninja -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }} -DCMAKE_MAKE_PROGRAM=ninja -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang .
           ninja 
 
     - name: cpack
