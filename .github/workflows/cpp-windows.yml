@@ -14,6 +14,12 @@ jobs:
       OPENSSL_ROOT_DIR: 'C:\Program Files\OpenSSL'
     
     steps:
+    - name: Locate OpenSSL 
+      run: | 
+        where openssl 
+        dir "C:\Program Files\OpenSSL-Win64\bin" 
+        dir C:\Windows\System32\libssl-*.dl
+    
     - uses: actions/checkout@v4
     - run: git fetch --prune --unshallow --tags
 
