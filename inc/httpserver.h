@@ -62,22 +62,23 @@ class HttpServer
 
         std::map<std::string,HttpServerRequestHandler::httpFunction>& getHttpFunc() {
             if (m_httpfunc.empty()) {
-                m_httpfunc["/api/version"] = [this](const struct mg_request_info *, const Json::Value &) -> Json::Value {
-                        return Json::Value(VERSION);
+                m_httpfunc["/api/version"] = [this](const struct mg_request_info *, const Json::Value &) -> HttpServerRequestHandler::httpFunctionReturn {
+                        std::string version = "\"" VERSION "\"";
+                        return std::make_tuple(200, std::map<std::string,std::string>(),Json::Value(version));
                 };
-                m_httpfunc["/api/streams"] = [this](const struct mg_request_info *, const Json::Value &) -> Json::Value {
+                m_httpfunc["/api/streams"] = [this](const struct mg_request_info *, const Json::Value &) -> HttpServerRequestHandler::httpFunctionReturn {
                         Json::Value answer(Json::objectValue);
                         for (auto & it : m_streams) {
                                 answer[it.first] = it.second->toJSON();
                         }
-                        return answer;
+                        return std::make_tuple(200, std::map<std::string,std::string>(), answer);
                 };                
-                m_httpfunc["/api/help"]    = [this](const struct mg_request_info *, const Json::Value & ) -> Json::Value {
+                m_httpfunc["/api/help"]    = [this](const struct mg_request_info *, const Json::Value & ) -> HttpServerRequestHandler::httpFunctionReturn {
                         Json::Value answer(Json::arrayValue);
                     for (const auto & it : m_httpfunc) {
                                 answer.append(it.first);
                         }
-                        return answer;
+                        return std::make_tuple(200, std::map<std::string,std::string>(), answer);
                 };
             }
             return m_httpfunc;

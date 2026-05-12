@@ -18,6 +18,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <cstdint>
 
 #include "cxxopts.hpp"
 
