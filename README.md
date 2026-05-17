@@ -1,6 +1,7 @@
 [![Snap Status](https://snapcraft.io/rtsp2ws/badge.svg)](https://snapcraft.io/rtsp2ws)
 [![GithubCI](https://github.com/mpromonet/rtsp2ws/workflows/C/C++%20CI%20linux/badge.svg)](https://github.com/mpromonet/rtsp2ws/actions)
 [![GithubCI](https://github.com/mpromonet/rtsp2ws/workflows/C/C++%20CI%20windows/badge.svg)](https://github.com/mpromonet/rtsp2ws/actions)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmpromonet%2Frtsp2web.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmpromonet%2Frtsp2web?ref=badge_shield)
 
 
 [![Release](https://img.shields.io/github/release/mpromonet/rtsp2ws.svg)](https://github.com/mpromonet/rtsp2ws/releases/latest)
@@ -51,3 +52,7 @@ The container entry point is the application, then you can :
         docker run -p 8080:8080 ghcr.io/mpromonet/rtsp2web rtsp://37.157.51.30/axis-media/media.amp rtsp://71.83.5.156/axis-media/media.amp rtsp://86.44.41.160/axis-media/media.amp 
         docker run -p 8080:8080 -v $PWD/keycert.pem:/tmp/keycert.pem ghcr.io/mpromonet/rtsp2web -c /tmp/keycert.pem rtsp://37.157.51.30/axis-media/media.amp rtsp://71.83.5.156/axis-media/media.amp
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmpromonet%2Frtsp2web.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmpromonet%2Frtsp2web?ref=badge_large)
