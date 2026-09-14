@@ -6,6 +6,6 @@ live/
 *.tar.gz
 dist/
 node_modules/
-rtsp2ws
+rtsp2web
 install_manifest.txt
 .devcontainer/.env

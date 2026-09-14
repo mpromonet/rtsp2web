@@ -1,7 +1,7 @@
 
   name: rtsp2ws
   base: core22
-  version: git
+  adopt-info: rtsp2web
   summary: RTSP to websocket 
   description: |
     This is a gateway to forward encoded frame received from RTSP/RTP to websocket and then decode using WebCodec.
@@ -12,7 +12,7 @@
   contact: michel.promonet@free.fr
 
   parts:
-    rtsp2ws:
+    rtsp2web:
       plugin: cmake
       source: .
       source-type: git
@@ -21,11 +21,14 @@
       - pkg-config
       - libssl-dev      
       stage-packages:
-      - libssl3      
+      - libssl3
+      override-pull: |
+        craftctl default
+        craftctl set version="$(git describe --tags --always)"
 
   apps:
-    rtsp2ws:
-      command: usr/local/bin/rtsp2ws -p $SNAP/usr/local/share/rtsp2ws/www -C $SNAP_USER_DATA/config.json -c $SNAP/usr/local/share/rtsp2ws/keycert.pem
+    rtsp2web:
+      command: usr/local/bin/rtsp2web -p $SNAP/usr/local/share/rtsp2web/www -C $SNAP_USER_DATA/config.json -c $SNAP/usr/local/share/rtsp2web/keycert.pem
       daemon: simple   
       plugs: 
       - network-bind

@@ -20,16 +20,16 @@ FROM $IMAGE
 LABEL maintainer="michel.promonet@free.fr"
 LABEL org.opencontainers.image.description="rtsp to websocket gateway"
 
-COPY --from=builder /usr/local/bin/rtsp2ws /usr/local/bin/
-COPY --from=builder /usr/local/share/rtsp2ws/ /usr/local/share/rtsp2ws/
+COPY --from=builder /usr/local/bin/rtsp2web /usr/local/bin/
+COPY --from=builder /usr/local/share/rtsp2web/ /usr/local/share/rtsp2web/
 
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates libssl-dev \
     && rm -rf /var/lib/apt/lists/ \
     && useradd -m user
 
-WORKDIR /usr/local/share/rtsp2ws
+WORKDIR /usr/local/share/rtsp2web
 USER user
 
-ENTRYPOINT [ "/usr/local/bin/rtsp2ws"]
+ENTRYPOINT [ "/usr/local/bin/rtsp2web"]
 CMD ["-C", "config.json", "-c", "keycert.pem"]
