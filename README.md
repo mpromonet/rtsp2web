@@ -21,7 +21,7 @@ Build
 
 Usage
 ------- 
-    ./rtsp2ws [OPTION...] <rtspurl> ... <rtspurl>
+    ./rtsp2web [OPTION...] <rtspurl> ... <rtspurl>
 
     -h, --help            Print usage
     -v, --verbose arg     Verbose (default: 0)
