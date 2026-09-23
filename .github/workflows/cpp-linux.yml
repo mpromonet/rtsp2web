@@ -32,7 +32,7 @@ jobs:
     - name: Attest
       uses: actions/attest-build-provenance@v1
       with:
-        subject-path: '${{ github.workspace }}/rtsp2ws'
+        subject-path: '${{ github.workspace }}/rtsp2web'
         
     - name: cpack 
       run: | 
