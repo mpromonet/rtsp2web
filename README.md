@@ -1,3 +1,5 @@
+# rtsp2web
+
 [![Snap Status](https://snapcraft.io/rtsp2ws/badge.svg)](https://snapcraft.io/rtsp2ws)
 [![GithubCI](https://github.com/mpromonet/rtsp2ws/workflows/C/C++%20CI%20linux/badge.svg)](https://github.com/mpromonet/rtsp2ws/actions)
 [![GithubCI](https://github.com/mpromonet/rtsp2ws/workflows/C/C++%20CI%20windows/badge.svg)](https://github.com/mpromonet/rtsp2ws/actions)
@@ -8,13 +10,15 @@
 
 *** Notice *** Live demo are stopped till I migrate to a european web hosting.
 
-# rtsp2web
-
 This is a simple application that connect to RTSP streams, send compressed data over websocket and then decode on browser side using [webcodec](https://github.com/w3c/webcodecs)
 
 [![Screenshot](images/screenshot.jpg)](https://rtsp2web.agreeabletree-365b9a90.canadacentral.azurecontainerapps.io)
 [Live Demo](https://rtsp2web.agreeabletree-365b9a90.canadacentral.azurecontainerapps.io)
 
+## Mirrors:
+* https://codeberg.org/mpromonet/rtsp2web.git
+* https://gitlab.com/mpromonet/rtsp2web.git
+  
 Build
 ------- 
 	cmake . && make
