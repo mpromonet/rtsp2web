@@ -9,3 +9,9 @@ node_modules/
 rtsp2web
 install_manifest.txt
 .devcontainer/.env
+*.vcxproj
+*.vcxproj.filters
+*.slnx
+rtsp2web.dir/
+x64/
+Release/

@@ -21,7 +21,7 @@ This is a simple application that connect to RTSP streams, send compressed data 
   
 Build
 ------- 
-	cmake . && make
+	cmake . && cmake --build . 
 
 Usage
 ------- 
