@@ -51,6 +51,7 @@ jobs:
     - name: pkg
       run: | 
         sudo apt-get update 
+        sudo add-apt-repository universe -y
         sudo apt-get install -y --no-install-recommends ca-certificates xz-utils cmake make pkg-config git g++-${{ matrix.crosscompiler }}
 
     - name: build
