@@ -1,0 +1,23 @@
+name: Update Codeberg mirror
+
+on: [push]
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+    - uses: yesolutions/mirror-action@master
+      with:
+        REMOTE: 'https://codeberg.org/${{ github.repository }}.git'
+        REMOTE_NAME: 'codeberg'
+        GIT_USERNAME: ${{ github.actor }}
+        GIT_PASSWORD: ${{ secrets.CODEBERG_TOKEN }}
