@@ -1,0 +1,58 @@
+name: Build docker
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: codeberg-medium
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install Buildah
+      run: |
+        apt-get update
+        apt-get install -y --no-install-recommends buildah ca-certificates
+
+    - name: Prepare image tags
+      id: meta
+      run: |
+        image="codeberg.org/$(printf '%s' "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
+        tag="$(printf '%s' "$GITHUB_REF_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9_.-]/-/g' | cut -c1-128)"
+        case "$tag" in
+          [a-z0-9_]*) ;;
+          *) tag="ref-$tag" ;;
+        esac
+        tag="${tag:0:128}"
+
+        tags="$image:$tag"
+        if [[ "$GITHUB_REF" == refs/tags/* && "$GITHUB_REF_NAME" =~ ^v?([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+          major="${BASH_REMATCH[1]}"
+          minor="${BASH_REMATCH[2]}"
+          tags="$tags,$image:$major.$minor,$image:$major,$image:latest"
+        fi
+
+        dev_tags="$(printf '%s' "$tags" | tr ',' '\n' | sed 's/$/-dev/' | paste -sd, -)"
+        echo "tags=$tags" >> "$FORGEJO_OUTPUT"
+        echo "dev_tags=$dev_tags" >> "$FORGEJO_OUTPUT"
+
+    - name: Build and push devcontainer
+      uses: https://codeberg.org/actions/buildah-simple@49e15f9395e93ff777a1180879d5a596605dd6c6
+      with:
+        context: .
+        tag: ${{ steps.meta.outputs.dev_tags }}
+        additional_flags: --target builder
+        push: true
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.CODEBERG_TOKEN }}
+        registry: codeberg.org
+
+    - name: Build and push
+      uses: https://codeberg.org/actions/buildah-simple@49e15f9395e93ff777a1180879d5a596605dd6c6
+      with:
+        context: .
+        tag: ${{ steps.meta.outputs.tags }}
+        push: true
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.CODEBERG_TOKEN }}
+        registry: codeberg.org
