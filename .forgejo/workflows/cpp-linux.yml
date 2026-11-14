@@ -1,0 +1,25 @@
+name: C/C++ CI linux
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        buildtype: [Debug, Release]
+
+    runs-on: codeberg-medium
+
+    steps:
+    - uses: actions/checkout@v4
+    - run: git fetch --prune --unshallow --tags
+
+    - name: pkg
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends ca-certificates g++ autoconf automake libtool xz-utils cmake make pkg-config git libjpeg-dev libssl-dev
+
+    - name: build
+      run: |
+        cmake -DCMAKE_BUILD_TYPE=${{ matrix.buildtype }} .
+        cmake --build . --parallel
