@@ -22,20 +22,6 @@ jobs:
           crosscompiler: arm-linux-gnueabihf
 
         - buildtype: Debug
-          system: mips
-          crosscompiler: mips-linux-gnu
-        - buildtype: Release
-          system: mips
-          crosscompiler: mips-linux-gnu
-
-        - buildtype: Debug
-          system: mipsel
-          crosscompiler: mipsel-linux-gnu
-        - buildtype: Release
-          system: mipsel
-          crosscompiler: mipsel-linux-gnu
-
-        - buildtype: Debug
           system: riscv64
           crosscompiler: riscv64-linux-gnu
         - buildtype: Release
@@ -50,7 +36,6 @@ jobs:
 
     - name: pkg
       run: | 
-        sudo add-apt-repository universe -y
         sudo apt-get update 
         sudo apt-get install -y --no-install-recommends ca-certificates xz-utils cmake make pkg-config git g++-${{ matrix.crosscompiler }}
 
